@@ -37,7 +37,7 @@ fun AskCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Lucide.MessageCircleQuestion,
+                    imageVector = Lucide.MessageCircleQuestionMark,
                     contentDescription = null,
                     tint = IrisWarning,
                     modifier = Modifier.size(15.dp)
