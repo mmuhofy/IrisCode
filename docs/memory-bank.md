@@ -245,5 +245,5 @@ Philosophy: If there is a terminal, no tool is needed. grep, ls, git → done vi
 
 ### Open Decisions
 
-- GitHub repo URL: TBD
+- GitHub repo URL: https://github.com/mmuhofy/IrisCode
 - Lottie animation: commission or self-design?
