@@ -82,6 +82,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 
 ### Features
 
@@ -100,6 +104,15 @@ All notable changes to Iris Code are documented here.
 
 
 - **ui:** Onboarding flow — Welcome, API key, project setup
+
+
+
+
+### Style
+
+
+
+- **ui:** Comprehensive UI polish across all screens
 
 
 
