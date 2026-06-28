@@ -50,8 +50,16 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 
 ### Features
+
+
+
+- **data:** Project management — Room, repository, UI
 
 
 
