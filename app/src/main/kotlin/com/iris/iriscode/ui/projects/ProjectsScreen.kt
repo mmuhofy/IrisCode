@@ -1,45 +1,19 @@
+// UNTESTED — verify before use
 package com.iris.iriscode.ui.projects
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,14 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.Project
-import com.iris.iriscode.ui.theme.IrisBackground
-import com.iris.iriscode.ui.theme.IrisError
-import com.iris.iriscode.ui.theme.IrisPrimary
-import com.iris.iriscode.ui.theme.IrisSurface
-import com.iris.iriscode.ui.theme.IrisSurfaceVariant
-import com.iris.iriscode.ui.theme.IrisSurfaceContainer
-import com.iris.iriscode.ui.theme.IrisTextSubtle
+import com.iris.iriscode.ui.theme.*
 
 @Composable
 fun ProjectsScreen(
@@ -80,19 +49,28 @@ fun ProjectsScreen(
             .background(IrisBackground)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 20.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.FolderOpen,
-                    contentDescription = null,
-                    tint = IrisPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(IrisPrimary.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Lucide.FolderKanban,
+                        contentDescription = null,
+                        tint = IrisPrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Projects",
                     style = MaterialTheme.typography.headlineMedium,
@@ -108,12 +86,20 @@ fun ProjectsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Outlined.FolderOpen,
-                            contentDescription = null,
-                            tint = IrisSurfaceVariant,
-                            modifier = Modifier.size(72.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(IrisSurfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Lucide.FolderOpen,
+                                contentDescription = null,
+                                tint = IrisTextSubtle,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "No projects yet",
@@ -124,7 +110,7 @@ fun ProjectsScreen(
                         Text(
                             text = "Tap + to create your first project",
                             style = MaterialTheme.typography.bodySmall,
-                            color = IrisTextSubtle,
+                            color = IrisTextSubtle.copy(alpha = 0.6f),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -133,10 +119,7 @@ fun ProjectsScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    )
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     items(projects, key = { it.id }) { project ->
                         val dismissState = rememberSwipeToDismissBoxState(
@@ -161,15 +144,16 @@ fun ProjectsScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(RoundedCornerShape(14.dp))
                                         .background(color)
                                         .padding(end = 20.dp),
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        tint = IrisTextSubtle,
-                                        contentDescription = "Delete"
+                                        imageVector = Lucide.Trash2,
+                                        tint = IrisBackground,
+                                        contentDescription = "Delete",
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             },
@@ -190,10 +174,15 @@ fun ProjectsScreen(
             onClick = onCreateProject,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = IrisPrimary
+                .padding(20.dp),
+            containerColor = IrisPrimary,
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Icon(Icons.Outlined.Add, contentDescription = "Create Project")
+            Icon(
+                imageVector = Lucide.Plus,
+                contentDescription = "Create Project",
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 
@@ -215,10 +204,10 @@ fun ProjectsScreen(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Outlined.Delete,
+                        Lucide.Trash2,
                         contentDescription = null,
                         tint = IrisError,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Delete Project")
@@ -240,31 +229,28 @@ fun ProjectsScreen(
 }
 
 @Composable
-private fun ProjectCard(
-    project: Project,
-    onClick: () -> Unit
-) {
+private fun ProjectCard(project: Project, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(IrisSurfaceContainer)
-            .padding(16.dp),
+            .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(IrisSurfaceVariant),
+                .clip(RoundedCornerShape(12.dp))
+                .background(IrisPrimary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Outlined.Folder,
+                imageVector = Lucide.FolderCode,
                 contentDescription = null,
                 tint = IrisPrimary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
 
@@ -290,10 +276,10 @@ private fun ProjectCard(
         }
 
         Icon(
-            imageVector = Icons.Outlined.FolderOpen,
+            imageVector = Lucide.ChevronRight,
             contentDescription = null,
             tint = IrisTextSubtle.copy(alpha = 0.4f),
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(18.dp)
         )
     }
 }

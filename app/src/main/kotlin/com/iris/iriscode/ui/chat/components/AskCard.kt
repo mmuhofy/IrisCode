@@ -1,41 +1,19 @@
+// UNTESTED — verify before use
 package com.iris.iriscode.ui.chat.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.ChatMessage
-import com.iris.iriscode.ui.theme.IrisOutline
-import com.iris.iriscode.ui.theme.IrisPrimary
-import com.iris.iriscode.ui.theme.IrisSurface
-import com.iris.iriscode.ui.theme.IrisTextSubtle
-import com.iris.iriscode.ui.theme.IrisWarning
+import com.iris.iriscode.ui.theme.*
 
 @Composable
 fun AskCard(
@@ -51,13 +29,21 @@ fun AskCard(
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Outlined.HelpOutline,
-                contentDescription = null,
-                tint = IrisWarning,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(IrisWarning.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Lucide.MessageCircleQuestion,
+                    contentDescription = null,
+                    tint = IrisWarning,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = message.question,
                 style = MaterialTheme.typography.bodyMedium,
@@ -68,20 +54,29 @@ fun AskCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         if (message.answer != null) {
-            Text(
-                text = message.answer,
-                style = MaterialTheme.typography.bodySmall,
-                color = IrisTextSubtle
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Lucide.CornerDownRight,
+                    contentDescription = null,
+                    tint = IrisTextSubtle.copy(alpha = 0.5f),
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = message.answer,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = IrisTextSubtle
+                )
+            }
         } else if (message.options.isNotEmpty()) {
-            Row {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 message.options.forEach { option ->
                     OutlinedButton(
                         onClick = { onAnswer(option) },
-                        modifier = Modifier.padding(end = 8.dp),
-                        colors = ButtonDefaults.outlinedButtonColors()
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = IrisPrimary)
                     ) {
-                        Text(option)
+                        Text(option, style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -90,9 +85,10 @@ fun AskCard(
             OutlinedTextField(
                 value = textAnswer,
                 onValueChange = { textAnswer = it },
-                placeholder = { Text("Type your answer...") },
+                placeholder = { Text("Type your answer…", color = IrisTextSubtle) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = IrisPrimary,
                     unfocusedBorderColor = IrisOutline,
@@ -103,9 +99,12 @@ fun AskCard(
             Button(
                 onClick = { onAnswer(textAnswer.trim()) },
                 enabled = textAnswer.isNotBlank(),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = IrisPrimary)
             ) {
-                Text("Send")
+                Icon(Lucide.Send, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Send", fontWeight = FontWeight.SemiBold)
             }
         }
     }

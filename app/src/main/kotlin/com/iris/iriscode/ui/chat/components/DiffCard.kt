@@ -1,29 +1,13 @@
+// UNTESTED — verify before use
 package com.iris.iriscode.ui.chat.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,19 +15,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.ChatMessage
-import com.iris.iriscode.ui.theme.IrisBackground
-import com.iris.iriscode.ui.theme.IrisError
-import com.iris.iriscode.ui.theme.IrisPrimary
-import com.iris.iriscode.ui.theme.IrisSuccess
-import com.iris.iriscode.ui.theme.IrisSurface
-import com.iris.iriscode.ui.theme.IrisTextSubtle
-import com.iris.iriscode.ui.theme.IrisWarning
+import com.iris.iriscode.ui.theme.*
 
 @Composable
-fun DiffCard(
-    message: ChatMessage.FileDiff
-) {
+fun DiffCard(message: ChatMessage.FileDiff) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -51,28 +28,31 @@ fun DiffCard(
             .clip(RoundedCornerShape(12.dp))
             .background(IrisSurface)
     ) {
+        // File header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(IrisBackground)
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Outlined.Description,
+                imageVector = Lucide.FileDiff,
                 contentDescription = null,
                 tint = IrisWarning,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(15.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = message.filePath,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = IrisWarning
+                color = IrisWarning,
+                modifier = Modifier.horizontalScroll(rememberScrollState())
             )
         }
 
+        // Diff content
         Text(
             text = message.diff,
             style = MaterialTheme.typography.bodySmall,
@@ -80,37 +60,47 @@ fun DiffCard(
             color = IrisTextSubtle,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .heightIn(max = 200.dp)
                 .verticalScroll(rememberScrollState())
                 .horizontalScroll(rememberScrollState())
         )
 
+        // Action row
         if (message.isApproved == null) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = { /* handled by parent */ },
                     modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = IrisSuccess)
                 ) {
                     Icon(
-                        Icons.Outlined.CheckCircle,
+                        Lucide.Check,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Approve", fontWeight = FontWeight.SemiBold)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = { /* handled by parent */ },
                     modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = IrisError)
                 ) {
+                    Icon(
+                        Lucide.X,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                        tint = IrisError
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Reject", fontWeight = FontWeight.SemiBold, color = IrisError)
                 }
             }
@@ -118,21 +108,16 @@ fun DiffCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val status = if (message.isApproved == true) "Approved" else "Rejected"
-                val color = if (message.isApproved == true) IrisSuccess else IrisError
-                val icon = if (message.isApproved == true) Icons.Outlined.CheckCircle else Icons.Outlined.Code
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(16.dp)
-                )
+                val approved = message.isApproved == true
+                val icon = if (approved) Lucide.CircleCheck else Lucide.CircleX
+                val color = if (approved) IrisSuccess else IrisError
+                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(15.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = status,
+                    text = if (approved) "Approved" else "Rejected",
                     style = MaterialTheme.typography.labelMedium,
                     color = color,
                     fontWeight = FontWeight.SemiBold

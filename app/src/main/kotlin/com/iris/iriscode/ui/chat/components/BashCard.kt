@@ -1,25 +1,13 @@
+// UNTESTED — verify before use
 package com.iris.iriscode.ui.chat.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Error
-import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,19 +15,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.ChatMessage
-import com.iris.iriscode.ui.theme.IrisBackground
-import com.iris.iriscode.ui.theme.IrisError
-import com.iris.iriscode.ui.theme.IrisPrimary
-import com.iris.iriscode.ui.theme.IrisSuccess
-import com.iris.iriscode.ui.theme.IrisSurface
-import com.iris.iriscode.ui.theme.IrisTextSubtle
-import com.iris.iriscode.ui.theme.IrisWarning
+import com.iris.iriscode.ui.theme.*
 
 @Composable
-fun BashCard(
-    message: ChatMessage.BashCommand
-) {
+fun BashCard(message: ChatMessage.BashCommand) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,18 +28,19 @@ fun BashCard(
             .clip(RoundedCornerShape(12.dp))
             .background(IrisSurface)
     ) {
+        // Command header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(IrisBackground)
-                .padding(10.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Outlined.Terminal,
+                imageVector = Lucide.SquareTerminal,
                 contentDescription = null,
                 tint = IrisSuccess,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(15.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -71,6 +53,7 @@ fun BashCard(
             )
         }
 
+        // Output
         if (message.output.isNotEmpty()) {
             Text(
                 text = message.output,
@@ -79,39 +62,48 @@ fun BashCard(
                 color = IrisTextSubtle,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp)
+                    .padding(12.dp)
+                    .heightIn(max = 120.dp)
                     .verticalScroll(rememberScrollState())
-                    .height(100.dp)
             )
         }
 
+        // Status
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (message.isRunning) {
+                Icon(
+                    imageVector = Lucide.LoaderCircle,
+                    contentDescription = null,
+                    tint = IrisWarning,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "Running...",
+                    text = "Running…",
                     style = MaterialTheme.typography.labelSmall,
                     color = IrisWarning,
                     fontWeight = FontWeight.Medium
                 )
             } else {
-                val icon = if (message.exitCode == 0) Icons.Outlined.CheckCircle else Icons.Outlined.Error
+                val icon = if (message.exitCode == 0) Lucide.CircleCheck else Lucide.CircleX
                 val color = if (message.exitCode == 0) IrisSuccess else IrisError
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(13.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "exit code: ${message.exitCode}",
+                    text = "exit ${message.exitCode}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = color
+                    color = color,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

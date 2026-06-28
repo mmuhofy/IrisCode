@@ -109,6 +109,9 @@ dependencies {
 
     // Lottie
     implementation(libs.lottie)
+    
+    // Icons
+    implementation(libs.compose.icons.lucide)
 
     // Diff
     implementation(libs.java.diff.utils)
