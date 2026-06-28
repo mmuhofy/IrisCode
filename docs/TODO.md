@@ -21,7 +21,7 @@ _Last updated: 2026-06-28_
 ### 1.2 Onboarding
 - [x] Onboarding state machine (one-time) — `OnboardingViewModel` 3-step
 - [x] Screen 1: Welcome + fade-in animations
-- [ ] Lottie animation (needs .json asset)
+- [x] Lottie animation — eye icon (`.lottie` format)
 - [x] Screen 2: API key input + Gemini validation call
 - [x] Screen 3: First project (SAF file picker or new folder)
 - [x] DataStore encrypted API key write

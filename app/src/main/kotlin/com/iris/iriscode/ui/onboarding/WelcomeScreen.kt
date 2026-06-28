@@ -28,7 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieComposition
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.iris.iriscode.ui.theme.IrisBackground
