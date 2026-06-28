@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **ui:** LottieCompositionSpec is in compose package, not lottie
+
+
+
 - **ui:** Correct Lottie imports for v6.4.0
 
 
@@ -31,6 +35,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
