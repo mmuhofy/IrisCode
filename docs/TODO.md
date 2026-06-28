@@ -19,12 +19,13 @@ _Last updated: 2026-06-28_
 - [x] Lottie dependency
 
 ### 1.2 Onboarding
-- [ ] Onboarding state machine (one-time)
-- [ ] Screen 1: Welcome + Lottie animation
-- [ ] Screen 2: API key input + Gemini validation call
-- [ ] Screen 3: First project (SAF file picker or new folder)
-- [ ] DataStore encrypted API key write
-- [ ] Onboarding completed flag
+- [x] Onboarding state machine (one-time) — `OnboardingViewModel` 3-step
+- [x] Screen 1: Welcome + fade-in animations
+- [ ] Lottie animation (needs .json asset)
+- [x] Screen 2: API key input + Gemini validation call
+- [x] Screen 3: First project (SAF file picker or new folder)
+- [x] DataStore encrypted API key write
+- [x] Onboarding completed flag
 
 ### 1.3 Project Management
 - [ ] Room — `Project` entity (id, name, path, lastSessionId, createdAt)

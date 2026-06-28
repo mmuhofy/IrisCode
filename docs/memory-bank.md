@@ -235,6 +235,15 @@ Philosophy: If there is a terminal, no tool is needed. grep, ls, git → done vi
 - `changelog.yml` + `cliff.toml` — auto-generate CHANGELOG.md on release via git-cliff
 - `LICENSE` — MIT License
 - Initial commit pushed to `main`
+
+### Session 2 — 2026-06-28: Onboarding (1.2)
+- `OnboardingPreferences`: DataStore (state) + EncryptedSharedPreferences (API key)
+- `OnboardingViewModel`: 3-step state machine (Welcome → ApiKey → ProjectSetup → Complete)
+- `WelcomeScreen`: fade-in animations, app name + tagline, "Get Started" button
+- `ApiKeyScreen`: text input, Gemini models endpoint validation via OkHttp, skip option
+- `ProjectSetupScreen`: SAF `OpenDocumentTree` folder picker, path display
+- `MainActivity`: `@AndroidEntryPoint`, `AnimatedContent` transitions
+- Manifest: `INTERNET` permission, `MainActivity` as launcher activity
 - Updated `gradle/libs.versions.toml` with full dependency catalog (Compose, Hilt, Room, Navigation, etc.)
 - Root `build.gradle.kts`: added Hilt, KSP, Compose Compiler plugins
 - `app/build.gradle.kts`: Compose enabled, all dependencies wired
