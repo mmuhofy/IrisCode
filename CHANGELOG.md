@@ -62,8 +62,16 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 
 ### Features
+
+
+
+- **ui:** Chat UI with cards, slash menu, toolbar
 
 
 
