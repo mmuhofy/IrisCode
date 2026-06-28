@@ -1,7 +1,5 @@
 package com.iris.iriscode.ui.onboarding
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +26,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.iris.iriscode.ui.theme.IrisAccent
+import com.airbnb.lottie.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieComposition
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.iris.iriscode.ui.theme.IrisBackground
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisTextSubtle
@@ -38,6 +40,8 @@ import com.iris.iriscode.util.Constants
 fun WelcomeScreen(
     onNext: () -> Unit
 ) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("eye_icon.lottie"))
+
     var logoAlpha by remember { mutableFloatStateOf(0f) }
     var taglineAlpha by remember { mutableFloatStateOf(0f) }
     var buttonAlpha by remember { mutableFloatStateOf(0f) }
@@ -63,19 +67,13 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
+            LottieAnimation(
+                composition = composition,
+                iterations = LottieConstants.IterateForever,
                 modifier = Modifier
-                    .size(96.dp)
-                    .alpha(logoAlpha),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "◇",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = IrisPrimary,
-                    fontWeight = FontWeight.Light
-                )
-            }
+                    .size(120.dp)
+                    .alpha(logoAlpha)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
