@@ -1,12 +1,8 @@
 package com.iris.iriscode.ui.chat
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -156,11 +152,10 @@ fun ChatScreen(
                     )
                 ) {
                     items(state.messages, key = { it.id }) { message ->
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(animationSpec = tween(300)) +
-                                    scaleIn(initialScale = 0.95f),
-                            exit = fadeOut() + scaleOut()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize(tween(300))
                         ) {
                             MessageBubble(message = message)
                         }
