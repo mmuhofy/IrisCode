@@ -18,6 +18,7 @@ appcompat = "1.7.1"
 material = "1.13.0"
 activityCompose = "1.9.2"
 hiltNavigationCompose = "1.2.0"
+documentfile = "1.0.1"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -79,6 +80,7 @@ java-diff-utils = { group = "io.github.java-diff-utils", name = "java-diff-utils
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
