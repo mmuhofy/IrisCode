@@ -46,20 +46,19 @@ _Last updated: 2026-06-28_
 - [ ] `ask_user` tool (AskCard → await response)
 
 ### 1.5 Chat UI
-- [ ] Chat screen (LazyColumn + input bar)
-- [ ] `BashCard` — command + live output
-- [ ] `DiffCard` — unified diff + Approve/Reject
-- [ ] `AskCard` — question + input/options
-- [ ] Slash menu (triggered by `/`)
+- [x] Chat screen (LazyColumn + input bar)
+- [x] `BashCard` — command + live output
+- [x] `DiffCard` — unified diff + Approve/Reject
+- [x] `AskCard` — question + input/options
 - [ ] @ mention picker
-- [ ] User / agent message bubbles
-- [ ] Work Mode chip in toolbar (PLAN / BUILD / AUTO)
-- [ ] Work Mode state in ViewModel — gates tool execution
-- [ ] PLAN mode: disable write_file + bash tools, agent informed via system prompt
-- [ ] AUTO mode: force both autonomy toggles ON for session duration
-- [ ] `/mode` slash command support
-- [ ] Model name chip in toolbar (short name, e.g. "flash")
-- [ ] Tap model chip → opens model bottom sheet (same as /models)
+- [x] User / agent message bubbles
+- [x] Work Mode chip in toolbar (PLAN / BUILD / AUTO)
+- [x] Work Mode state in ViewModel — gates tool execution
+- [x] PLAN mode: disable write_file + bash tools, agent informed via system prompt
+- [x] AUTO mode: force both autonomy toggles ON for session duration
+- [x] `/mode` slash command support
+- [x] Model name chip in toolbar (short name, e.g. "flash")
+- [x] Tap model chip → opens model bottom sheet (same as /models)
 
 ### 1.6 Command Palette
 - [ ] Bottom sheet — smooth open
