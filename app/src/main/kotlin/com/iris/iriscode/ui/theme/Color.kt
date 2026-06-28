@@ -16,3 +16,8 @@ val IrisError = Color(0xFFEF4444)
 val IrisWarning = Color(0xFFF59E0B)
 val IrisSurfaceContainer = Color(0xFF1E1E32)
 val IrisOutline = Color(0xFF2D2D44)
+
+// WorkMode colors
+val IrisPlan = IrisWarning
+val IrisBuild = Color(0xFF7C3AED)
+val IrisAuto = IrisSuccess

@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Error
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.ui.theme.IrisBackground
+import com.iris.iriscode.ui.theme.IrisError
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSuccess
 import com.iris.iriscode.ui.theme.IrisSurface
@@ -38,7 +43,7 @@ fun BashCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 64.dp, top = 4.dp, bottom = 4.dp)
+            .padding(start = 16.dp, end = 56.dp, top = 2.dp, bottom = 2.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(IrisSurface)
     ) {
@@ -49,18 +54,18 @@ fun BashCard(
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "$",
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                color = IrisSuccess,
-                fontWeight = FontWeight.Bold
+            Icon(
+                imageVector = Icons.Outlined.Terminal,
+                contentDescription = null,
+                tint = IrisSuccess,
+                modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = message.command,
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.horizontalScroll(rememberScrollState())
             )
@@ -90,13 +95,21 @@ fun BashCard(
                 Text(
                     text = "Running...",
                     style = MaterialTheme.typography.labelSmall,
-                    color = IrisWarning
+                    color = IrisWarning,
+                    fontWeight = FontWeight.Medium
                 )
             } else {
-                val icon = if (message.exitCode == 0) "✓" else "✗"
-                val color = if (message.exitCode == 0) IrisSuccess else MaterialTheme.colorScheme.error
+                val icon = if (message.exitCode == 0) Icons.Outlined.CheckCircle else Icons.Outlined.Error
+                val color = if (message.exitCode == 0) IrisSuccess else IrisError
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "$icon exit code: ${message.exitCode}",
+                    text = "exit code: ${message.exitCode}",
                     style = MaterialTheme.typography.labelSmall,
                     color = color
                 )

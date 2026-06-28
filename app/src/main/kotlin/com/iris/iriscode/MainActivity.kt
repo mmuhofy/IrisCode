@@ -8,13 +8,26 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.iris.iriscode.domain.model.Project
 import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
@@ -25,6 +38,8 @@ import com.iris.iriscode.ui.onboarding.WelcomeScreen
 import com.iris.iriscode.ui.projects.ProjectsScreen
 import com.iris.iriscode.ui.projects.ProjectsViewModel
 import com.iris.iriscode.ui.theme.IrisCodeTheme
+import com.iris.iriscode.ui.theme.IrisPrimary
+import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import dagger.hilt.android.AndroidEntryPoint
 
 private sealed class Screen {
@@ -52,33 +67,42 @@ class MainActivity : ComponentActivity() {
 
                 when (val screen = currentScreen) {
                     is Screen.Onboarding -> {
-                        AnimatedContent(
-                            targetState = state.currentStep,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            label = "onboarding"
-                        ) { step ->
-                            when (step) {
-                                OnboardingStep.Welcome -> {
-                                    WelcomeScreen(onNext = onboardingVm::nextStep)
-                                }
-                                OnboardingStep.ApiKey -> {
-                                    ApiKeyScreen(
-                                        apiKey = state.apiKey,
-                                        error = state.apiKeyError,
-                                        isValidating = state.isValidating,
-                                        onApiKeyChange = onboardingVm::updateApiKey,
-                                        onNext = onboardingVm::nextStep,
-                                        onSkip = onboardingVm::skipApiKey
-                                    )
-                                }
-                                OnboardingStep.ProjectSetup -> {
-                                    ProjectSetupScreen(
-                                        projectPath = state.projectPath,
-                                        onProjectPathSelected = onboardingVm::setProjectPath,
-                                        onNext = onboardingVm::nextStep
-                                    )
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                AnimatedContent(
+                                    targetState = state.currentStep,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    label = "onboarding"
+                                ) { step ->
+                                    when (step) {
+                                        OnboardingStep.Welcome -> {
+                                            WelcomeScreen(onNext = onboardingVm::nextStep)
+                                        }
+                                        OnboardingStep.ApiKey -> {
+                                            ApiKeyScreen(
+                                                apiKey = state.apiKey,
+                                                error = state.apiKeyError,
+                                                isValidating = state.isValidating,
+                                                onApiKeyChange = onboardingVm::updateApiKey,
+                                                onNext = onboardingVm::nextStep,
+                                                onSkip = onboardingVm::skipApiKey
+                                            )
+                                        }
+                                        OnboardingStep.ProjectSetup -> {
+                                            ProjectSetupScreen(
+                                                projectPath = state.projectPath,
+                                                onProjectPathSelected = onboardingVm::setProjectPath,
+                                                onNext = onboardingVm::nextStep
+                                            )
+                                        }
+                                    }
                                 }
                             }
+
+                            OnboardingPageIndicator(
+                                currentStep = state.currentStep,
+                                modifier = Modifier.padding(bottom = 48.dp)
+                            )
                         }
                     }
 
@@ -103,6 +127,35 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingPageIndicator(
+    currentStep: OnboardingStep,
+    modifier: Modifier = Modifier
+) {
+    val steps = listOf(OnboardingStep.Welcome, OnboardingStep.ApiKey, OnboardingStep.ProjectSetup)
+    val currentIndex = steps.indexOf(currentStep)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        steps.forEachIndexed { index, _ ->
+            val isActive = index <= currentIndex
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .width(if (isActive) 24.dp else 8.dp)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (isActive) IrisPrimary else IrisSurfaceVariant)
+            )
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.iris.iriscode.ui.chat.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,8 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -22,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +34,7 @@ import com.iris.iriscode.ui.theme.IrisOutline
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurface
 import com.iris.iriscode.ui.theme.IrisTextSubtle
+import com.iris.iriscode.ui.theme.IrisWarning
 
 @Composable
 fun AskCard(
@@ -40,16 +44,25 @@ fun AskCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 64.dp, top = 4.dp, bottom = 4.dp)
+            .padding(start = 16.dp, end = 56.dp, top = 2.dp, bottom = 2.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(IrisSurface)
-            .padding(12.dp)
+            .padding(14.dp)
     ) {
-        Text(
-            text = message.question,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.HelpOutline,
+                contentDescription = null,
+                tint = IrisWarning,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = message.question,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

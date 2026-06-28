@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
     val isProcessing: Boolean = false,
+    val isTyping: Boolean = false,
     val workMode: WorkMode = WorkMode.DEFAULT,
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
@@ -45,12 +47,14 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         _state.value = _state.value.copy(
             messages = _state.value.messages + message,
             inputText = "",
-            isProcessing = true
+            isProcessing = true,
+            isTyping = true
         )
 
-        // Mock agent response
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
+            delay(800)
+            _state.value = _state.value.copy(isTyping = false)
+            delay(200)
             val response = ChatMessage.AgentText(
                 id = UUID.randomUUID().toString(),
                 text = "I received: \"$text\""
@@ -140,7 +144,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         _state.value = _state.value.copy(messages = updated)
 
         viewModelScope.launch {
-            kotlinx.coroutines.delay(500)
+            delay(500)
             val response = ChatMessage.AgentText(
                 id = UUID.randomUUID().toString(),
                 text = "Thanks for your answer: \"$answer\""

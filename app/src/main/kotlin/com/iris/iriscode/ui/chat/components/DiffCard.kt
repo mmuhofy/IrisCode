@@ -9,16 +9,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
@@ -40,17 +47,31 @@ fun DiffCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 64.dp, top = 4.dp, bottom = 4.dp)
+            .padding(start = 16.dp, end = 56.dp, top = 2.dp, bottom = 2.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(IrisSurface)
     ) {
-        Text(
-            text = message.filePath,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = IrisWarning,
-            modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 4.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(IrisBackground)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Description,
+                contentDescription = null,
+                tint = IrisWarning,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = message.filePath,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = IrisWarning
+            )
+        }
 
         Text(
             text = message.diff,
@@ -76,6 +97,12 @@ fun DiffCard(
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = IrisSuccess)
                 ) {
+                    Icon(
+                        Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Approve", fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -84,19 +111,33 @@ fun DiffCard(
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = IrisError)
                 ) {
-                    Text("Reject", fontWeight = FontWeight.SemiBold)
+                    Text("Reject", fontWeight = FontWeight.SemiBold, color = IrisError)
                 }
             }
         } else {
-            val status = if (message.isApproved == true) "Approved" else "Rejected"
-            val color = if (message.isApproved == true) IrisSuccess else IrisError
-            Text(
-                text = status,
-                style = MaterialTheme.typography.labelMedium,
-                color = color,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(12.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val status = if (message.isApproved == true) "Approved" else "Rejected"
+                val color = if (message.isApproved == true) IrisSuccess else IrisError
+                val icon = if (message.isApproved == true) Icons.Outlined.CheckCircle else Icons.Outlined.Code
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = color,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }

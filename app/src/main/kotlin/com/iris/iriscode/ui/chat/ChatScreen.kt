@@ -1,13 +1,21 @@
 package com.iris.iriscode.ui.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -18,11 +26,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,10 +57,14 @@ import com.iris.iriscode.domain.model.WorkMode
 import com.iris.iriscode.ui.chat.components.MessageBubble
 import com.iris.iriscode.ui.chat.components.ModelSheet
 import com.iris.iriscode.ui.chat.components.SlashMenu
+import com.iris.iriscode.ui.theme.IrisAuto
 import com.iris.iriscode.ui.theme.IrisBackground
+import com.iris.iriscode.ui.theme.IrisBuild
 import com.iris.iriscode.ui.theme.IrisOutline
+import com.iris.iriscode.ui.theme.IrisPlan
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurface
+import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import com.iris.iriscode.ui.theme.IrisTextSubtle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +88,6 @@ fun ChatScreen(
             .fillMaxSize()
             .background(IrisBackground)
     ) {
-        // Top App Bar
         TopAppBar(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -114,7 +127,6 @@ fun ChatScreen(
             )
         )
 
-        // Messages
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -138,18 +150,30 @@ fun ChatScreen(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        vertical = 8.dp
+                    contentPadding = PaddingValues(
+                        top = 8.dp,
+                        bottom = 8.dp
                     )
                 ) {
                     items(state.messages, key = { it.id }) { message ->
-                        MessageBubble(message = message)
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn(animationSpec = tween(300)) +
+                                    scaleIn(initialScale = 0.95f),
+                            exit = fadeOut() + scaleOut()
+                        ) {
+                            MessageBubble(message = message)
+                        }
+                    }
+                    if (state.isTyping) {
+                        item(key = "typing") {
+                            TypingIndicator()
+                        }
                     }
                 }
             }
         }
 
-        // Slash menu overlay
         if (state.showSlashMenu) {
             SlashMenu(
                 query = state.slashQuery,
@@ -157,7 +181,6 @@ fun ChatScreen(
             )
         }
 
-        // Input bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -194,19 +217,19 @@ fun ChatScreen(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (state.isProcessing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
-                    color = IrisPrimary
-                )
-            } else {
-                IconButton(
-                    onClick = { viewModel.sendMessage() },
-                    enabled = state.inputText.isNotBlank()
-                ) {
+            IconButton(
+                onClick = { viewModel.sendMessage() },
+                enabled = state.inputText.isNotBlank() && !state.isProcessing
+            ) {
+                if (state.isProcessing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = IrisPrimary
+                    )
+                } else {
                     Icon(
-                        imageVector = Icons.Outlined.ArrowBack,
+                        imageVector = Icons.Outlined.Send,
                         contentDescription = "Send",
                         tint = if (state.inputText.isNotBlank()) IrisPrimary else IrisTextSubtle
                     )
@@ -215,7 +238,6 @@ fun ChatScreen(
         }
     }
 
-    // Model bottom sheet
     if (state.showModelSheet) {
         ModelSheet(
             currentModel = state.currentModel,
@@ -230,18 +252,27 @@ private fun WorkModeChip(
     mode: WorkMode,
     onClick: () -> Unit
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = when (mode) {
+            WorkMode.PLAN -> IrisPlan
+            WorkMode.BUILD -> IrisBuild
+            WorkMode.AUTO -> IrisAuto
+        },
+        label = "modeColor"
+    )
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(IrisPrimary.copy(alpha = 0.15f))
+            .background(bgColor.copy(alpha = 0.15f))
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             text = mode.displayName,
             style = MaterialTheme.typography.labelMedium,
-            color = IrisPrimary,
-            fontWeight = FontWeight.SemiBold
+            color = bgColor,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -264,5 +295,48 @@ private fun ModelChip(
             color = IrisPrimary,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+@Composable
+private fun TypingIndicator() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 56.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(IrisSurfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(IrisPrimary.copy(alpha = 0.6f))
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(18.dp))
+                .background(IrisSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                repeat(3) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(IrisTextSubtle.copy(alpha = 0.5f))
+                    )
+                }
+            }
+        }
     }
 }

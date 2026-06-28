@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.iris.iriscode.ui.theme.IrisBackground
 import com.iris.iriscode.ui.theme.IrisOutline
 import com.iris.iriscode.ui.theme.IrisPrimary
+import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import com.iris.iriscode.ui.theme.IrisTextSubtle
 
 @Composable
@@ -50,7 +55,16 @@ fun ApiKeyScreen(
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Icon(
+            imageVector = Icons.Outlined.Key,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = IrisPrimary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = "API Key",
@@ -62,7 +76,7 @@ fun ApiKeyScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Enter your Gemini API key to get started.\nYou can get one at Google AI Studio.",
+            text = "Enter your Gemini API key to get started.\nGet one at Google AI Studio.",
             style = MaterialTheme.typography.bodyMedium,
             color = IrisTextSubtle,
             textAlign = TextAlign.Center
@@ -78,7 +92,7 @@ fun ApiKeyScreen(
             visualTransformation = if (apiKey.isEmpty()) VisualTransformation.None
                 else PasswordVisualTransformation(),
             isError = error != null,
-            supportingText = error?.let { { Text(it) } },
+            supportingText = error?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Ascii,
@@ -93,7 +107,7 @@ fun ApiKeyScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = onNext,
@@ -107,23 +121,19 @@ fun ApiKeyScreen(
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp,
-                    modifier = Modifier.height(20.dp)
+                    modifier = Modifier.size(20.dp)
                 )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Validating...", fontWeight = FontWeight.SemiBold)
             } else {
-                Text(
-                    text = "Validate & Continue",
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Continue", fontWeight = FontWeight.SemiBold)
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         TextButton(onClick = onSkip) {
-            Text(
-                text = "Skip for now",
-                color = IrisTextSubtle
-            )
+            Text("Skip for now", color = IrisTextSubtle)
         }
     }
 }
