@@ -28,11 +28,11 @@ _Last updated: 2026-06-28_
 - [x] Onboarding completed flag
 
 ### 1.3 Project Management
-- [ ] Room — `Project` entity (id, name, path, lastSessionId, createdAt)
-- [ ] `ProjectRepository` interface + impl
-- [ ] Projects screen (list + empty state)
-- [ ] Create project bottom sheet
-- [ ] Delete project (confirmation dialog)
+- [x] Room — `Project` entity (id, name, path, lastSessionId, createdAt)
+- [x] `ProjectRepository` interface + impl
+- [x] Projects screen (list + empty state)
+- [x] Create project bottom sheet
+- [x] Delete project (confirmation dialog)
 
 ### 1.4 Agent Core
 - [ ] `IrisTool` sealed interface

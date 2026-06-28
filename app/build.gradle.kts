@@ -6,6 +6,13 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = java.util.Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        load(keystorePropertiesFile.inputStream())
+    }
+}
+
 android {
     namespace = "com.iris.iriscode"
     compileSdk = 36
@@ -14,8 +21,29 @@ android {
         applicationId = "com.iris.iriscode"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = project.property("VERSION_CODE").toString().toInt()
+        versionName = "${project.property("VERSION_MAJOR")}.${project.property("VERSION_MINOR")}.${project.property("VERSION_PATCH")}"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let {
+                rootProject.file(it)
+            }
+            storePassword = keystoreProperties["storePassword"] as? String
+            keyAlias = keystoreProperties["keyAlias"] as? String
+            keyPassword = keystoreProperties["keyPassword"] as? String
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 
     buildFeatures {
