@@ -21,6 +21,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **project:** Add keystore and versioning
+
+
+
 - **project:** Remove lint from CI workflow
 
 
@@ -35,6 +39,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
