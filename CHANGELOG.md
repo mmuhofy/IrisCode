@@ -4,6 +4,15 @@ All notable changes to Iris Code are documented here.
 
 
 
+### Bug Fixes
+
+
+
+- **ui:** Correct Lottie imports for v6.4.0
+
+
+
+
 ### Chores
 
 
@@ -22,6 +31,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
