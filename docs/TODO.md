@@ -6,10 +6,10 @@ _Last updated: 2026-06-28_
 ## Phase 1 — Foundation (v1.0 MVP)
 
 ### 1.1 Project Setup
-- [ ] Create GitHub repo (public, MIT)
+- [x] Create GitHub repo (public, MIT) — https://github.com/mmuhofy/IrisCode
 - [ ] `README.md` — vision, placeholder screens, setup instruction
-- [ ] Create GitHub Action Workflow
-- [ ] Set up a system that auto-generates CHANGELOG.md.
+- [x] Create GitHub Action Workflow — `ci.yml` (build + lint + APK)
+- [x] Set up a system that auto-generates CHANGELOG.md — `changelog.yml` + `cliff.toml`
 - [x] Create Android Studio project (Kotlin, Compose, min SDK 23)
 - [x] `gradle/libs.versions.toml` — all dependencies
 - [x] Hilt setup + `@HiltAndroidApp` Application class

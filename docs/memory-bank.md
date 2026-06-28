@@ -230,6 +230,11 @@ Philosophy: If there is a terminal, no tool is needed. grep, ls, git → done vi
 ## Session Log
 
 ### Session 1 — 2026-06-28: Project Setup (1.1)
+- GitHub repo created: https://github.com/mmuhofy/IrisCode (public, MIT)
+- `ci.yml` — Android CI workflow (build + lint + APK upload)
+- `changelog.yml` + `cliff.toml` — auto-generate CHANGELOG.md on release via git-cliff
+- `LICENSE` — MIT License
+- Initial commit pushed to `main`
 - Updated `gradle/libs.versions.toml` with full dependency catalog (Compose, Hilt, Room, Navigation, etc.)
 - Root `build.gradle.kts`: added Hilt, KSP, Compose Compiler plugins
 - `app/build.gradle.kts`: Compose enabled, all dependencies wired
