@@ -21,7 +21,20 @@ All notable changes to Iris Code are documented here.
 
 
 
+### Documentation
+
+
+
+- Update CHANGELOG.md
+
+
+
+
 ### Features
+
+
+
+- **ui:** Add Lottie eye animation to WelcomeScreen
 
 
 
