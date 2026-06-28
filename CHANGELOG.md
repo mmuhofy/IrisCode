@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **build:** Proper Java imports for keystore properties in Gradle KTS
+
+
+
 - **ui:** LottieCompositionSpec is in compose package, not lottie
 
 
@@ -39,6 +43,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
