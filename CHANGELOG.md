@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **ui:** Add missing background import in AskCard
+
+
+
 - **build:** Proper Java imports for keystore properties in Gradle KTS
 
 
@@ -43,6 +47,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
