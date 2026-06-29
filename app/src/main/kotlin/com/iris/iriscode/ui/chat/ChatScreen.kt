@@ -33,10 +33,15 @@ import com.iris.iriscode.ui.theme.*
 fun ChatScreen(
     viewModel: ChatViewModel,
     projectName: String,
+    projectPath: String,
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
+
+    LaunchedEffect(projectPath) {
+        viewModel.setProjectPath(projectPath)
+    }
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {

@@ -29,36 +29,23 @@ class GeminiClient @Inject constructor() {
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
-    fun streamChat(
+    /**
+     * Raw streaming of Gemini streamGenerateContent SSE events.
+     * Each emission is the JSON payload of a single `data: ...` line.
+     * "[DONE]" is filtered out.
+     */
+    private fun streamRaw(
         apiKey: String,
-        model: String = GeminiApi.MODEL_FLASH,
-        history: List<ChatMessage>,
-        systemPrompt: String? = null
+        model: String,
+        body: JSONObject
     ): Flow<String> = callbackFlow {
 
         val url = "${GeminiApi.BASE_URL}/models/${model}:streamGenerateContent?alt=sse&key=$apiKey"
-
-        val contents = buildContents(history)
-
-        val body = JSONObject().apply {
-            put("contents", contents)
-            if (!systemPrompt.isNullOrBlank()) {
-                put("system_instruction", JSONObject().apply {
-                    put("parts", JSONArray().put(JSONObject().put("text", systemPrompt)))
-                })
-            }
-            put("generationConfig", JSONObject().apply {
-                put("temperature", 0.7)
-                put("maxOutputTokens", 8192)
-            })
-        }
 
         val request = Request.Builder()
             .url(url)
             .post(body.toString().toRequestBody(jsonMediaType))
             .build()
-
-        var previousText = ""
 
         val listener = object : EventSourceListener() {
 
@@ -69,23 +56,7 @@ class GeminiClient @Inject constructor() {
                 data: String
             ) {
                 if (data == "[DONE]") return
-                try {
-                    val json = JSONObject(data)
-                    val candidates = json.optJSONArray("candidates")
-                    val parts = candidates
-                        ?.optJSONObject(0)
-                        ?.optJSONObject("content")
-                        ?.optJSONArray("parts")
-                    val fullText = parts?.optJSONObject(0)?.optString("text", "") ?: ""
-
-                    if (fullText.length > previousText.length) {
-                        val delta = fullText.substring(previousText.length)
-                        previousText = fullText
-                        trySend(delta)
-                    }
-                } catch (e: Exception) {
-                    trySend("\n\n[Parse error: ${e.message}]")
-                }
+                trySend(data)
             }
 
             override fun onFailure(
@@ -111,6 +82,65 @@ class GeminiClient @Inject constructor() {
         awaitClose { eventSource.cancel() }
     }
 
+    // ─── Build request body ──────────────────────────────────────────────────
+
+    private fun buildRequestBody(
+        contents: JSONArray,
+        tools: List<GeminiTool> = emptyList(),
+        systemPrompt: String? = null
+    ): JSONObject = JSONObject().apply {
+        put("contents", contents)
+        if (tools.isNotEmpty()) {
+            val toolsArray = JSONArray()
+            tools.forEach { toolsArray.put(it.toJson()) }
+            put("tools", toolsArray)
+        }
+        if (!systemPrompt.isNullOrBlank()) {
+            put("system_instruction", JSONObject().apply {
+                put("parts", JSONArray().put(JSONObject().put("text", systemPrompt)))
+            })
+        }
+        put("generationConfig", JSONObject().apply {
+            put("temperature", 0.7)
+            put("maxOutputTokens", 8192)
+        })
+    }
+
+    // ─── streamChat — text-only streaming ───────────────────────────────────
+
+    fun streamChat(
+        apiKey: String,
+        model: String = GeminiApi.MODEL_FLASH,
+        history: List<ChatMessage>,
+        systemPrompt: String? = null
+    ): Flow<String> = callbackFlow {
+        val contents = chatMessagesToContents(history)
+        val body = buildRequestBody(contents, emptyList(), systemPrompt)
+        var previousText = ""
+
+        streamRaw(apiKey, model, body).collect { dataString ->
+            if (dataString.startsWith("\n\n[")) {
+                trySend(dataString)
+                return@collect
+            }
+            try {
+                val json = JSONObject(dataString)
+                val parts = json.optJSONArray("candidates")
+                    ?.optJSONObject(0)
+                    ?.optJSONObject("content")
+                    ?.optJSONArray("parts")
+                val fullText = parts?.optJSONObject(0)?.optString("text", "") ?: ""
+                if (fullText.length > previousText.length) {
+                    val delta = fullText.substring(previousText.length)
+                    previousText = fullText
+                    trySend(delta)
+                }
+            } catch (e: Exception) {
+                trySend("\n\n[Parse error: ${e.message}]")
+            }
+        }
+    }
+
     fun streamText(
         apiKey: String,
         model: String = GeminiApi.MODEL_FLASH,
@@ -120,60 +150,124 @@ class GeminiClient @Inject constructor() {
         ChatMessage.UserText(id = "prompt", text = prompt)
     ), systemPrompt)
 
+    // ─── streamInteraction — full streaming with function call detection ──
+
     fun streamInteraction(
         apiKey: String,
         model: String = GeminiApi.MODEL_FLASH,
         history: List<GeminiStep>,
-        tools: List<GeminiTool>,
+        tools: List<GeminiTool> = emptyList(),
         systemPrompt: String? = null
     ): Flow<GeminiSseEvent> = callbackFlow {
 
-        val chatHistory = history.mapNotNull { step ->
-            when (step) {
-                is GeminiStep.UserInput -> ChatMessage.UserText(
-                    id = step.text.hashCode().toString(), text = step.text
-                )
-                is GeminiStep.ModelOutput -> if (step.text.isNotBlank()) ChatMessage.AgentText(
-                    id = step.text.hashCode().toString(), text = step.text
-                ) else null
-                is GeminiStep.FunctionCall -> ChatMessage.AgentText(
-                    id = step.id, text = "[Function call: ${step.name}]"
-                )
-                is GeminiStep.FunctionResult -> ChatMessage.AgentText(
-                    id = step.callId, text = "[Function result: ${step.name}]"
-                )
+        val contents = geminiStepsToContents(history)
+        val body = buildRequestBody(contents, tools, systemPrompt)
+        var previousText = ""
+        val functionCalls = mutableListOf<GeminiStep.FunctionCall>()
+
+        streamRaw(apiKey, model, body).collect { dataString ->
+            if (dataString.startsWith("\n\n[")) {
+                trySend(GeminiSseEvent.StreamError(dataString.trimStart('\n')))
+                return@collect
+            }
+            try {
+                val json = JSONObject(dataString)
+                val candidates = json.optJSONArray("candidates") ?: return@collect
+                val content = candidates
+                    .optJSONObject(0)
+                    ?.optJSONObject("content") ?: return@collect
+                val parts = content.optJSONArray("parts") ?: return@collect
+
+                for (i in 0 until parts.length()) {
+                    val part = parts.getJSONObject(i)
+
+                    if (part.has("text")) {
+                        val fullText = part.getString("text")
+                        if (fullText.length > previousText.length) {
+                            val delta = fullText.substring(previousText.length)
+                            previousText = fullText
+                            trySend(GeminiSseEvent.TextDelta(delta))
+                        }
+                    }
+
+                    if (part.has("functionCall")) {
+                        val fc = part.getJSONObject("functionCall")
+                        val name = fc.getString("name")
+                        val argsObj = fc.optJSONObject("args") ?: JSONObject()
+                        val args = argsObj.keys().asSequence().associateWith { key ->
+                            argsObj.get(key)
+                        }
+                        val fcStep = GeminiStep.FunctionCall(
+                            id = "fc_${System.currentTimeMillis()}_${functionCalls.size}",
+                            name = name,
+                            arguments = args
+                        )
+                        functionCalls.add(fcStep)
+                        trySend(GeminiSseEvent.FunctionCallStarted(fcStep.id, fcStep.name))
+                    }
+                }
+            } catch (e: Exception) {
+                trySend(GeminiSseEvent.StreamError("Parse error: ${e.message}"))
             }
         }
 
-        var fullText = StringBuilder()
-        var error: String? = null
-
-        streamChat(
-            apiKey = apiKey,
-            model = model,
-            history = chatHistory,
-            systemPrompt = systemPrompt
-        ).collect { delta ->
-            if (delta.startsWith("\n\n[")) {
-                error = delta.trimStart('\n')
-            } else {
-                fullText.append(delta)
-                trySend(GeminiSseEvent.TextDelta(delta))
-            }
-        }
-
-        if (error != null) {
-            trySend(GeminiSseEvent.StreamError(error!!))
-        } else {
-            trySend(GeminiSseEvent.InteractionCompleted(
-                toolCalls = emptyList(),
-                inputTokens = 0,
-                outputTokens = fullText.length
-            ))
-        }
+        trySend(GeminiSseEvent.InteractionCompleted(
+            toolCalls = functionCalls.toList(),
+            inputTokens = 0,
+            outputTokens = previousText.length
+        ))
     }
 
-    private fun buildContents(history: List<ChatMessage>): JSONArray {
+    // ─── Content builders ──────────────────────────────────────────────────
+
+    private fun geminiStepsToContents(history: List<GeminiStep>): JSONArray {
+        val contents = JSONArray()
+        for (step in history) {
+            when (step) {
+                is GeminiStep.UserInput -> {
+                    contents.put(JSONObject().apply {
+                        put("role", "user")
+                        put("parts", JSONArray().put(JSONObject().put("text", step.text)))
+                    })
+                }
+                is GeminiStep.ModelOutput -> {
+                    if (step.text.isNotBlank()) {
+                        contents.put(JSONObject().apply {
+                            put("role", "model")
+                            put("parts", JSONArray().put(JSONObject().put("text", step.text)))
+                        })
+                    }
+                }
+                is GeminiStep.FunctionCall -> {
+                    contents.put(JSONObject().apply {
+                        put("role", "model")
+                        put("parts", JSONArray().put(JSONObject().apply {
+                            put("functionCall", JSONObject().apply {
+                                put("name", step.name)
+                                put("args", JSONObject(step.arguments))
+                            })
+                        }))
+                    })
+                }
+                is GeminiStep.FunctionResult -> {
+                    contents.put(JSONObject().apply {
+                        put("role", "function")
+                        put("parts", JSONArray().put(JSONObject().apply {
+                            put("functionResponse", JSONObject().apply {
+                                put("name", step.name)
+                                put("response", JSONObject().apply {
+                                    put("output", step.result)
+                                })
+                            })
+                        }))
+                    })
+                }
+            }
+        }
+        return contents
+    }
+
+    private fun chatMessagesToContents(history: List<ChatMessage>): JSONArray {
         val contents = JSONArray()
         for (msg in history) {
             val role: String

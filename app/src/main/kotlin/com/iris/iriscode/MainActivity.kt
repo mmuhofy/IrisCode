@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 private sealed class Screen {
     object Onboarding : Screen()
     object Projects : Screen()
-    data class Chat(val projectName: String, val projectId: Long) : Screen()
+    data class Chat(val projectName: String, val projectId: Long, val projectPath: String) : Screen()
 }
 
 @AndroidEntryPoint
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
                         ProjectsScreen(
                             viewModel = projectsVm,
                             onProjectClick = { project ->
-                                currentScreen = Screen.Chat(project.name, project.id)
+                                currentScreen = Screen.Chat(project.name, project.id, project.path)
                             },
                             onCreateProject = { projectsVm.showCreateSheet() }
                         )
@@ -117,6 +117,7 @@ class MainActivity : ComponentActivity() {
                         ChatScreen(
                             viewModel = chatVm,
                             projectName = screen.projectName,
+                            projectPath = screen.projectPath,
                             onBack = { currentScreen = Screen.Projects }
                         )
                     }
