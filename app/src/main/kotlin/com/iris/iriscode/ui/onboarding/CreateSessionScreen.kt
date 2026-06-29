@@ -26,26 +26,12 @@ import com.iris.iriscode.ui.theme.IrisBackground
 import com.iris.iriscode.ui.theme.IrisOutline
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisTextSubtle
-import com.iris.iriscode.util.StoragePermissionRequest
-import com.iris.iriscode.util.hasStoragePermission
 
 @Composable
 fun CreateSessionScreen(
     onCreate: (projectName: String, prompt: String) -> Unit
 ) {
     var prompt by remember { mutableStateOf("") }
-    var needsPermission by remember { mutableStateOf(false) }
-    var pendingName by remember { mutableStateOf("") }
-    var pendingPrompt by remember { mutableStateOf("") }
-
-    if (needsPermission) {
-        StoragePermissionRequest(
-            onGranted = {
-                needsPermission = false
-                onCreate(pendingName, pendingPrompt)
-            }
-        )
-    }
 
     Column(
         modifier = Modifier
@@ -103,13 +89,7 @@ fun CreateSessionScreen(
         Button(
             onClick = {
                 val name = prompt.take(40).trim().replace("\n", " ").ifBlank { "My App" }
-                if (hasStoragePermission()) {
-                    onCreate(name, prompt)
-                } else {
-                    pendingName = name
-                    pendingPrompt = prompt
-                    needsPermission = true
-                }
+                onCreate(name, prompt)
             },
             modifier = Modifier
                 .fillMaxWidth()
