@@ -50,6 +50,7 @@ data class ChatUiState(
     val webSearchEnabled: Boolean = false,
     val effortLevel: String = "med",
     val modelDropdownExpanded: Boolean = false,
+    val showMoreMenu: Boolean = false,
     val projectPath: String? = null,
     val projectName: String? = null
 )
@@ -403,6 +404,14 @@ class ChatViewModel @Inject constructor(
             currentModel = modelId,
             modelDropdownExpanded = false
         )
+    }
+
+    fun toggleMoreMenu() {
+        _state.value = _state.value.copy(showMoreMenu = !_state.value.showMoreMenu)
+    }
+
+    fun dismissMoreMenu() {
+        _state.value = _state.value.copy(showMoreMenu = false)
     }
 
     fun setTab(tab: ChatTab) {

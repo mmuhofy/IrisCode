@@ -67,10 +67,13 @@ fun ChatScreen(
             projectName = projectName,
             currentModel = state.currentModel,
             modelDropdownExpanded = state.modelDropdownExpanded,
+            showMoreMenu = state.showMoreMenu,
             onBack = onBack,
             onModelClick = viewModel::toggleModelDropdown,
             onModelDismiss = viewModel::dismissModelDropdown,
-            onModelSelect = viewModel::selectModel
+            onModelSelect = viewModel::selectModel,
+            onMoreClick = viewModel::toggleMoreMenu,
+            onMoreDismiss = viewModel::dismissMoreMenu
         )
 
         PillTabs(
@@ -197,10 +200,13 @@ private fun TopBar(
     projectName: String,
     currentModel: String,
     modelDropdownExpanded: Boolean,
+    showMoreMenu: Boolean,
     onBack: () -> Unit,
     onModelClick: () -> Unit,
     onModelDismiss: () -> Unit,
-    onModelSelect: (String) -> Unit
+    onModelSelect: (String) -> Unit,
+    onMoreClick: () -> Unit,
+    onMoreDismiss: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -299,6 +305,42 @@ private fun TopBar(
                 }
             }
         }
+
+        // Right: more menu
+        Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+            IconButton(onClick = onMoreClick) {
+                Icon(
+                    imageVector = Lucide.MoreVertical,
+                    contentDescription = "More options",
+                    tint = IrisText,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            DropdownMenu(
+                expanded = showMoreMenu,
+                onDismissRequest = onMoreDismiss,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.background(IrisSurface)
+            ) {
+                DropdownMenuItem(
+                    onClick = { onMoreDismiss() },
+                    text = { Text("Settings", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
+                    icon = { Icon(Lucide.Settings, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
+                )
+                DropdownMenuItem(
+                    onClick = { onMoreDismiss() },
+                    text = { Text("New Session", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
+                    icon = { Icon(Lucide.Plus, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
+                )
+                HorizontalDivider(color = IrisOutline.copy(alpha = 0.3f))
+                DropdownMenuItem(
+                    onClick = { onMoreDismiss() },
+                    text = { Text("Export Session", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
+                    icon = { Icon(Lucide.Download, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
+                )
+            }
+        }
     }
 }
 
@@ -364,36 +406,68 @@ private fun PillTabs(
     selectedTab: ChatTab,
     onTabSelect: (ChatTab) -> Unit
 ) {
-    Row(
+    // Tab bar with its own background and top divider
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+            .background(IrisBackground)
     ) {
-        ChatTab.entries.forEach { tab ->
-            val isSelected = tab == selectedTab
-            val bgAlpha by animateFloatAsState(
-                targetValue = if (isSelected) 1f else 0f,
-                animationSpec = tween(200),
-                label = "tabBg"
-            )
+        // Thin top divider
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(IrisOutline.copy(alpha = 0.3f))
+        )
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        if (isSelected) IrisPrimary.copy(alpha = 0.15f)
-                        else IrisSurfaceVariant
-                    )
-                    .clickable { onTabSelect(tab) }
-                    .padding(horizontal = 16.dp, vertical = 7.dp)
-            ) {
-                Text(
-                    text = tab.name,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (isSelected) IrisPrimary else IrisTextSecondary
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            ChatTab.entries.forEach { tab ->
+                val isSelected = tab == selectedTab
+                val bgAlpha by animateFloatAsState(
+                    targetValue = if (isSelected) 1f else 0f,
+                    animationSpec = tween(200),
+                    label = "tabBg"
                 )
+
+                val tabIcon = when (tab) {
+                    ChatTab.Chat -> Lucide.MessageSquare
+                    ChatTab.Terminal -> Lucide.SquareTerminal
+                    ChatTab.Files -> Lucide.Folder
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (isSelected) IrisPrimary.copy(alpha = 0.15f)
+                            else IrisSurfaceVariant
+                        )
+                        .clickable { onTabSelect(tab) }
+                        .padding(horizontal = 14.dp, vertical = 7.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = tabIcon,
+                            contentDescription = null,
+                            tint = if (isSelected) IrisPrimary else IrisTextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = tab.name,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (isSelected) IrisPrimary else IrisTextSecondary
+                        )
+                    }
+                }
             }
         }
     }
