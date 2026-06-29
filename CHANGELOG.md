@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **ui:** Uniform IrisBackground, statusbar padding for all screens, remove TopBar bg override
+
+
+
 - **ui:** Status bar transparency, input bar border, + sheet -> ModalBottomSheet
 
 
@@ -71,6 +75,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
