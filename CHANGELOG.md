@@ -8,6 +8,22 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **dependecy:** Add missing dependecy to app/build.gradle.kts
+
+
+
+- **ui:** Correct Lucide icon name in AskCard
+
+
+
+- **build:** Switch lucide dependency from android to cmp variant for ImageVector API
+
+
+
+- Resolve CI build errors — missing imports and AnimatedVisibility usage
+
+
+
 - **ui:** Add missing background import in AskCard
 
 
@@ -86,8 +102,32 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 
 ### Features
+
+
+
+- **agent:** Implement AgentLoop ??? streaming tool call loop with approval suspension
+
+
+
+- **agent:** Add ToolRegistry + 4 tool implementations
+
+
+
+- **data:** Add GeminiClient with Interactions API SSE streaming + function calling
+
+
+
+- **domain:** Add IrisTool interface, ToolResult, AgentEvent sealed classes
+
+
+
+- **ui:** Migrate icon set from Material Outlined to Lucide via composables/icons-lucide-android
 
 
 
