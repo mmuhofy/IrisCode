@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.*
+import com.iris.iriscode.ui.chat.components.FilesTab
 import com.iris.iriscode.ui.chat.components.MessageBubble
 import com.iris.iriscode.ui.chat.components.SlashMenu
 import com.iris.iriscode.ui.theme.*
@@ -52,7 +53,7 @@ fun ChatScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(IrisBackground)
+            .background(IrisSurface)
             .statusBarsPadding()
     ) {
         TopBar(
@@ -74,64 +75,72 @@ fun ChatScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(IrisBackground)
         ) {
-            if (state.selectedTab == ChatTab.Terminal) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Lucide.SquareTerminal,
-                            contentDescription = null,
-                            tint = IrisTextSecondary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Terminal ready",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = IrisTextSecondary
-                        )
-                    }
-                }
-            } else {
-                if (state.messages.isEmpty()) {
+            when (state.selectedTab) {
+                ChatTab.Terminal -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                imageVector = Lucide.BrainCircuit,
+                                imageVector = Lucide.SquareTerminal,
                                 contentDescription = null,
-                                tint = IrisPrimary.copy(alpha = 0.3f),
-                                modifier = Modifier.size(36.dp)
+                                tint = IrisTextSecondary,
+                                modifier = Modifier.size(32.dp)
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "What do you want Iris to do?",
-                                style = MaterialTheme.typography.bodyLarge,
+                                text = "Terminal ready",
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = IrisTextSecondary
                             )
                         }
                     }
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 4.dp)
-                    ) {
-                        items(state.messages, key = { it.id }) { message ->
-                            MessageBubble(
-                                message = message,
-                                onAnswerAsk = { answer -> viewModel.answerAsk(message.id, answer) },
-                                onApproveDiff = { viewModel.approveDiff(message.id) },
-                                onRejectDiff = { viewModel.rejectDiff(message.id) }
-                            )
+                }
+                ChatTab.Files -> {
+                    FilesTab()
+                }
+                ChatTab.Chat -> {
+                    if (state.messages.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Lucide.BrainCircuit,
+                                    contentDescription = null,
+                                    tint = IrisPrimary.copy(alpha = 0.3f),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "What do you want Iris to do?",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = IrisTextSecondary
+                                )
+                            }
                         }
-                        if (state.isTyping) {
-                            item(key = "typing") { TypingIndicator() }
+                    } else {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(top = 4.dp, bottom = 4.dp)
+                        ) {
+                            items(state.messages, key = { it.id }) { message ->
+                                MessageBubble(
+                                    message = message,
+                                    onAnswerAsk = { answer -> viewModel.answerAsk(message.id, answer) },
+                                    onApproveDiff = { viewModel.approveDiff(message.id) },
+                                    onRejectDiff = { viewModel.rejectDiff(message.id) }
+                                )
+                            }
+                            if (state.isTyping) {
+                                item(key = "typing") { TypingIndicator() }
+                            }
                         }
                     }
                 }
@@ -306,7 +315,6 @@ private fun PillTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(IrisSurface)
             .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {

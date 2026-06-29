@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-enum class ChatTab { Chat, Terminal }
+enum class ChatTab { Chat, Terminal, Files }
 
 data class ModelOption(
     val id: String,
