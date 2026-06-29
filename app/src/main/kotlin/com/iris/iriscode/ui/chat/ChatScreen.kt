@@ -1,12 +1,7 @@
 package com.iris.iriscode.ui.chat
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,6 +48,7 @@ fun ChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(IrisBackground)
+            .statusBarsPadding()
     ) {
         TopBar(
             projectName = projectName,
@@ -139,23 +135,6 @@ fun ChatScreen(
             )
         }
 
-        AnimatedVisibility(
-            visible = state.showExpandedPanel,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-        ) {
-            ExpandedPanel(
-                workMode = state.workMode,
-                effortLevel = state.effortLevel,
-                thinkingEnabled = state.thinkingEnabled,
-                webSearchEnabled = state.webSearchEnabled,
-                onModeChange = viewModel::setWorkMode,
-                onEffortChange = viewModel::setEffortLevel,
-                onThinkingChange = viewModel::setThinking,
-                onWebSearchChange = viewModel::setWebSearch
-            )
-        }
-
         InputBar(
             inputText = state.inputText,
             isProcessing = state.isProcessing,
@@ -169,8 +148,20 @@ fun ChatScreen(
                 }
             },
             onSend = viewModel::sendMessage,
-            onToggleExpanded = viewModel::toggleExpandedPanel,
+            onToggleExpanded = viewModel::toggleOptionsSheet,
             onSwipeLeft = { viewModel.toggleSlashMenu(true) }
+        )
+    }
+
+    if (state.showOptionsSheet) {
+        OptionsSheet(
+            workMode = state.workMode,
+            thinkingEnabled = state.thinkingEnabled,
+            webSearchEnabled = state.webSearchEnabled,
+            onModeChange = viewModel::setWorkMode,
+            onThinkingChange = viewModel::setThinking,
+            onWebSearchChange = viewModel::setWebSearch,
+            onDismiss = viewModel::dismissOptionsSheet
         )
     }
 }
@@ -392,8 +383,8 @@ private fun InputBar(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() }),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = IrisOutline,
-                        unfocusedBorderColor = IrisOutline,
+                        focusedBorderColor = IrisOutline.copy(alpha = 0f),
+                        unfocusedBorderColor = IrisOutline.copy(alpha = 0f),
                         cursorColor = IrisPrimary,
                         focusedContainerColor = IrisSurface,
                         unfocusedContainerColor = IrisSurface
@@ -475,88 +466,98 @@ private fun InputBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExpandedPanel(
+private fun OptionsSheet(
     workMode: com.iris.iriscode.domain.model.WorkMode,
-    effortLevel: String,
     thinkingEnabled: Boolean,
     webSearchEnabled: Boolean,
     onModeChange: (com.iris.iriscode.domain.model.WorkMode) -> Unit,
-    onEffortChange: (String) -> Unit,
     onThinkingChange: (Boolean) -> Unit,
-    onWebSearchChange: (Boolean) -> Unit
+    onWebSearchChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(IrisBackground)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = IrisBackground,
+        contentColor = IrisText
     ) {
-        Text(
-            text = "MODE",
-            style = MaterialTheme.typography.labelSmall,
-            color = IrisTextMuted,
-            letterSpacing = 1.2.sp
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            com.iris.iriscode.domain.model.WorkMode.entries.forEach { mode ->
-                val isActive = mode == workMode
-                val color = when (mode) {
-                    com.iris.iriscode.domain.model.WorkMode.PLAN -> IrisPlan
-                    com.iris.iriscode.domain.model.WorkMode.BUILD -> IrisBuild
-                    com.iris.iriscode.domain.model.WorkMode.AUTO -> IrisAuto
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isActive) color.copy(alpha = 0.2f) else IrisSurfaceVariant)
-                        .border(
-                            width = 1.dp,
-                            color = if (isActive) color else IrisOutline,
-                            shape = RoundedCornerShape(8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+                .navigationBarsPadding()
+        ) {
+            Text(
+                text = "MODE",
+                style = MaterialTheme.typography.labelSmall,
+                color = IrisTextMuted,
+                letterSpacing = 1.2.sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                com.iris.iriscode.domain.model.WorkMode.entries.forEach { mode ->
+                    val isActive = mode == workMode
+                    val color = when (mode) {
+                        com.iris.iriscode.domain.model.WorkMode.PLAN -> IrisPlan
+                        com.iris.iriscode.domain.model.WorkMode.BUILD -> IrisBuild
+                        com.iris.iriscode.domain.model.WorkMode.AUTO -> IrisAuto
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isActive) color.copy(alpha = 0.2f) else IrisSurfaceVariant)
+                            .border(
+                                width = 1.dp,
+                                color = if (isActive) color else IrisOutline,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable { onModeChange(mode) }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = mode.displayName,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isActive) color else IrisTextSecondary,
+                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
                         )
-                        .clickable { onModeChange(mode) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = mode.displayName,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isActive) color else IrisTextSecondary,
-                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
-                    )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(10.dp))
-        HorizontalDivider(color = IrisOutline, thickness = 0.5.dp)
-        Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = IrisOutline, thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(10.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Thinking", style = MaterialTheme.typography.bodySmall, color = IrisTextSecondary)
-            Switch(
-                checked = thinkingEnabled,
-                onCheckedChange = onThinkingChange,
-                colors = SwitchDefaults.colors(checkedTrackColor = IrisPrimary)
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Web Search", style = MaterialTheme.typography.bodySmall, color = IrisTextSecondary)
-            Switch(
-                checked = webSearchEnabled,
-                onCheckedChange = onWebSearchChange,
-                colors = SwitchDefaults.colors(checkedTrackColor = IrisPrimary)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Thinking", style = MaterialTheme.typography.bodySmall, color = IrisTextSecondary)
+                Switch(
+                    checked = thinkingEnabled,
+                    onCheckedChange = onThinkingChange,
+                    colors = SwitchDefaults.colors(checkedTrackColor = IrisPrimary)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Web Search", style = MaterialTheme.typography.bodySmall, color = IrisTextSecondary)
+                Switch(
+                    checked = webSearchEnabled,
+                    onCheckedChange = onWebSearchChange,
+                    colors = SwitchDefaults.colors(checkedTrackColor = IrisPrimary)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

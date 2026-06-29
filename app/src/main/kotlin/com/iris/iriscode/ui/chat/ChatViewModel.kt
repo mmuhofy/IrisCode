@@ -38,7 +38,7 @@ data class ChatUiState(
     val showSlashMenu: Boolean = false,
     val slashQuery: String = "",
     val selectedTab: ChatTab = ChatTab.Chat,
-    val showExpandedPanel: Boolean = false,
+    val showOptionsSheet: Boolean = false,
     val thinkingEnabled: Boolean = true,
     val webSearchEnabled: Boolean = false,
     val effortLevel: String = "med",
@@ -142,8 +142,12 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         _state.value = _state.value.copy(selectedTab = tab)
     }
 
-    fun toggleExpandedPanel() {
-        _state.value = _state.value.copy(showExpandedPanel = !_state.value.showExpandedPanel)
+    fun toggleOptionsSheet() {
+        _state.value = _state.value.copy(showOptionsSheet = !_state.value.showOptionsSheet)
+    }
+
+    fun dismissOptionsSheet() {
+        _state.value = _state.value.copy(showOptionsSheet = false)
     }
 
     fun setThinking(enabled: Boolean) {
