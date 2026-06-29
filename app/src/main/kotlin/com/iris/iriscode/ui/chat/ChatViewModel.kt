@@ -15,6 +15,19 @@ import javax.inject.Inject
 
 enum class ChatTab { Chat, Terminal }
 
+data class ModelOption(
+    val id: String,
+    val displayName: String,
+    val provider: String
+)
+
+val availableModels = listOf(
+    ModelOption("flash", "Gemini 2.5 Flash", "Google"),
+    ModelOption("pro", "Gemini 2.5 Pro", "Google"),
+    ModelOption("claude-sonnet", "Claude Sonnet", "Anthropic"),
+    ModelOption("gpt-4o", "GPT-4o", "OpenAI")
+)
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
@@ -24,12 +37,12 @@ data class ChatUiState(
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
     val slashQuery: String = "",
-    val showModelSheet: Boolean = false,
     val selectedTab: ChatTab = ChatTab.Chat,
     val showExpandedPanel: Boolean = false,
     val thinkingEnabled: Boolean = true,
     val webSearchEnabled: Boolean = false,
-    val effortLevel: String = "med"
+    val effortLevel: String = "med",
+    val modelDropdownExpanded: Boolean = false
 )
 
 @HiltViewModel
@@ -91,9 +104,9 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             "plan" -> setWorkMode(WorkMode.PLAN)
             "build" -> setWorkMode(WorkMode.BUILD)
             "auto" -> setWorkMode(WorkMode.AUTO)
-            "models" -> showModelSheet()
+            "models" -> { /* handled by dropdown */ }
             "new" -> clearChat()
-            "settings" -> { /* navigate to settings - handled by parent */ }
+            "settings" -> { /* navigate to settings */ }
             else -> {
                 val message = ChatMessage.UserText(
                     id = UUID.randomUUID().toString(),
@@ -110,18 +123,18 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun showModelSheet() {
-        _state.value = _state.value.copy(showModelSheet = true)
+    fun toggleModelDropdown() {
+        _state.value = _state.value.copy(modelDropdownExpanded = !_state.value.modelDropdownExpanded)
     }
 
-    fun hideModelSheet() {
-        _state.value = _state.value.copy(showModelSheet = false)
+    fun dismissModelDropdown() {
+        _state.value = _state.value.copy(modelDropdownExpanded = false)
     }
 
-    fun selectModel(model: String) {
+    fun selectModel(modelId: String) {
         _state.value = _state.value.copy(
-            currentModel = model,
-            showModelSheet = false
+            currentModel = modelId,
+            modelDropdownExpanded = false
         )
     }
 

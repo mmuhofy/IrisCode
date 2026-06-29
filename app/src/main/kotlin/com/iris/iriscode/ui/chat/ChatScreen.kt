@@ -1,7 +1,7 @@
 package com.iris.iriscode.ui.chat
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -10,6 +10,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,25 +24,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.*
-import com.iris.iriscode.domain.model.WorkMode
 import com.iris.iriscode.ui.chat.components.MessageBubble
-import com.iris.iriscode.ui.chat.components.ModelSheet
 import com.iris.iriscode.ui.chat.components.SlashMenu
 import com.iris.iriscode.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
     projectName: String,
-    onBack: () -> Unit,
-    onSettings: () -> Unit = {}
+    onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
@@ -57,98 +54,20 @@ fun ChatScreen(
             .fillMaxSize()
             .background(IrisBackground)
     ) {
-        TopAppBar(
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = projectName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(IrisOutline)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "main",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = IrisTextSecondary
-                        )
-                    }
-                }
-            },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Lucide.ArrowLeft,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            actions = {
-                WorkModeChip(
-                    mode = state.workMode,
-                    onClick = {
-                        val next = when (state.workMode) {
-                            WorkMode.PLAN -> WorkMode.BUILD
-                            WorkMode.BUILD -> WorkMode.AUTO
-                            WorkMode.AUTO -> WorkMode.PLAN
-                        }
-                        viewModel.setWorkMode(next)
-                    }
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                ModelChip(
-                    label = state.currentModel,
-                    onClick = { viewModel.showModelSheet() }
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                IconButton(onClick = { /* new session */ }) {
-                    Icon(
-                        imageVector = Lucide.Plus,
-                        contentDescription = "New Session",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                IconButton(onClick = onSettings) {
-                    Icon(
-                        imageVector = Lucide.Settings,
-                        contentDescription = "Settings",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = IrisSurface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface
-            )
+        TopBar(
+            projectName = projectName,
+            currentModel = state.currentModel,
+            modelDropdownExpanded = state.modelDropdownExpanded,
+            onBack = onBack,
+            onModelClick = viewModel::toggleModelDropdown,
+            onModelDismiss = viewModel::dismissModelDropdown,
+            onModelSelect = viewModel::selectModel
         )
 
-        TabRow(
-            selectedTabIndex = state.selectedTab.ordinal,
-            containerColor = IrisSurface,
-            contentColor = IrisPrimary,
-            divider = { HorizontalDivider(color = IrisOutline, thickness = 0.5.dp) }
-        ) {
-            Tab(
-                selected = state.selectedTab == ChatTab.Chat,
-                onClick = { viewModel.setTab(ChatTab.Chat) },
-                text = { Text("Chat", fontWeight = FontWeight.Medium) },
-                selectedContentColor = IrisPrimary,
-                unselectedContentColor = IrisTextSecondary
-            )
-            Tab(
-                selected = state.selectedTab == ChatTab.Terminal,
-                onClick = { viewModel.setTab(ChatTab.Terminal) },
-                text = { Text("Terminal", fontWeight = FontWeight.Medium) },
-                selectedContentColor = IrisPrimary,
-                unselectedContentColor = IrisTextSecondary
-            )
-        }
+        PillTabs(
+            selectedTab = state.selectedTab,
+            onTabSelect = viewModel::setTab
+        )
 
         Box(
             modifier = Modifier
@@ -240,7 +159,6 @@ fun ChatScreen(
         InputBar(
             inputText = state.inputText,
             isProcessing = state.isProcessing,
-            showExpanded = state.showExpandedPanel,
             onTextChange = { text ->
                 viewModel.updateInput(text)
                 if (text.startsWith("/")) {
@@ -251,96 +169,129 @@ fun ChatScreen(
                 }
             },
             onSend = viewModel::sendMessage,
-            onToggleExpanded = viewModel::toggleExpandedPanel
-        )
-    }
-
-    if (state.showModelSheet) {
-        ModelSheet(
-            currentModel = state.currentModel,
-            onModelSelected = viewModel::selectModel,
-            onDismiss = viewModel::hideModelSheet
+            onToggleExpanded = viewModel::toggleExpandedPanel,
+            onSwipeLeft = { viewModel.toggleSlashMenu(true) }
         )
     }
 }
 
 @Composable
-private fun InputBar(
-    inputText: String,
-    isProcessing: Boolean,
-    showExpanded: Boolean,
-    onTextChange: (String) -> Unit,
-    onSend: () -> Unit,
-    onToggleExpanded: () -> Unit
+private fun TopBar(
+    projectName: String,
+    currentModel: String,
+    modelDropdownExpanded: Boolean,
+    onBack: () -> Unit,
+    onModelClick: () -> Unit,
+    onModelDismiss: () -> Unit,
+    onModelSelect: (String) -> Unit
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(IrisSurface)
-            .navigationBarsPadding()
-            .imePadding()
+            .padding(start = 4.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        OutlinedTextField(
-            value = inputText,
-            onValueChange = onTextChange,
-            placeholder = {
-                Text(
-                    "Message Iris…",
-                    color = IrisTextSecondary
-                )
-            },
-            singleLine = false,
-            maxLines = 4,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = { onSend() }),
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = IrisPrimary,
-                unfocusedBorderColor = IrisOutline,
-                cursorColor = IrisPrimary
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Lucide.ArrowLeft,
+                contentDescription = "Back",
+                tint = IrisText,
+                modifier = Modifier.size(20.dp)
             )
+        }
+
+        Text(
+            text = projectName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
         )
 
-        Row(
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .clip(RoundedCornerShape(4.dp))
+                .background(IrisOutline)
+                .padding(horizontal = 6.dp, vertical = 2.dp)
         ) {
-            ActionButton(icon = Lucide.Slash, label = "Commands", onClick = { onTextChange("/") })
-            Spacer(modifier = Modifier.width(2.dp))
-            ActionButton(icon = Lucide.Plus, label = "More", onClick = onToggleExpanded)
-            Spacer(modifier = Modifier.width(2.dp))
-            ActionButton(icon = Lucide.Mic, label = "Voice", onClick = {})
+            Text(
+                text = "main",
+                style = MaterialTheme.typography.labelSmall,
+                color = IrisTextSecondary
+            )
+        }
 
-            Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
 
-            if (isProcessing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = IrisPrimary
+        Box {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onModelClick)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = currentModel,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = IrisTextSecondary
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (inputText.isNotBlank()) IrisPrimary else IrisSurfaceVariant
-                        )
-                        .clickable(enabled = inputText.isNotBlank(), onClick = onSend),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Lucide.ArrowUp,
-                        contentDescription = "Send",
-                        tint = if (inputText.isNotBlank()) IrisBackground else IrisTextSecondary,
-                        modifier = Modifier.size(16.dp)
-                    )
+                Spacer(modifier = Modifier.width(3.dp))
+                Icon(
+                    imageVector = Lucide.ChevronDown,
+                    contentDescription = "Change model",
+                    tint = IrisTextMuted,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+
+            DropdownMenu(
+                expanded = modelDropdownExpanded,
+                onDismissRequest = onModelDismiss,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.background(IrisSurface)
+            ) {
+                availableModels.forEach { model ->
+                    val isSelected = model.id == currentModel
+                    Surface(
+                        onClick = { onModelSelect(model.id) },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) IrisPrimary.copy(alpha = 0.12f)
+                                else IrisSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = model.displayName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) IrisPrimary else IrisText
+                                )
+                                Text(
+                                    text = model.provider,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = IrisTextSecondary.copy(alpha = 0.6f)
+                                )
+                            }
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Lucide.Check,
+                                    contentDescription = null,
+                                    tint = IrisPrimary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -348,36 +299,189 @@ private fun InputBar(
 }
 
 @Composable
-private fun ActionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+private fun PillTabs(
+    selectedTab: ChatTab,
+    onTabSelect: (ChatTab) -> Unit
+) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth()
+            .background(IrisSurface)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = IrisTextSecondary,
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = IrisTextSecondary
-        )
+        ChatTab.entries.forEach { tab ->
+            val isSelected = tab == selectedTab
+            val bgAlpha by animateFloatAsState(
+                targetValue = if (isSelected) 1f else 0f,
+                animationSpec = tween(200),
+                label = "tabBg"
+            )
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        if (isSelected) IrisPrimary.copy(alpha = 0.15f)
+                        else IrisSurfaceVariant
+                    )
+                    .clickable { onTabSelect(tab) }
+                    .padding(horizontal = 16.dp, vertical = 7.dp)
+            ) {
+                Text(
+                    text = tab.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    color = if (isSelected) IrisPrimary else IrisTextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InputBar(
+    inputText: String,
+    isProcessing: Boolean,
+    onTextChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onToggleExpanded: () -> Unit,
+    onSwipeLeft: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(IrisBackground)
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .border(1.dp, IrisOutline, RoundedCornerShape(24.dp))
+                .background(IrisSurface)
+                .pointerInput(Unit) {
+                    var dragTotal = 0f
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            dragTotal += dragAmount
+                        },
+                        onDragEnd = {
+                            if (dragTotal < -60f) onSwipeLeft()
+                            dragTotal = 0f
+                        },
+                        onDragCancel = { dragTotal = 0f }
+                    )
+                }
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = onTextChange,
+                    placeholder = {
+                        Text("Message Iris…", color = IrisTextSecondary)
+                    },
+                    singleLine = false,
+                    maxLines = 3,
+                    minLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = IrisOutline,
+                        unfocusedBorderColor = IrisOutline,
+                        cursorColor = IrisPrimary,
+                        focusedContainerColor = IrisSurface,
+                        unfocusedContainerColor = IrisSurface
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 4.dp, top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onToggleExpanded,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Lucide.Plus,
+                            contentDescription = "More options",
+                            tint = IrisTextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = { /* voice input */ },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Lucide.Mic,
+                                contentDescription = "Voice input",
+                                tint = IrisTextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(30.dp),
+                                strokeWidth = 2.dp,
+                                color = IrisPrimary
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (inputText.isNotBlank()) IrisPrimary
+                                        else IrisSurfaceVariant
+                                    )
+                                    .clickable(
+                                        enabled = inputText.isNotBlank(),
+                                        onClick = onSend
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Lucide.ArrowUp,
+                                    contentDescription = "Send",
+                                    tint = if (inputText.isNotBlank()) IrisBackground
+                                           else IrisTextSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun ExpandedPanel(
-    workMode: WorkMode,
+    workMode: com.iris.iriscode.domain.model.WorkMode,
     effortLevel: String,
     thinkingEnabled: Boolean,
     webSearchEnabled: Boolean,
-    onModeChange: (WorkMode) -> Unit,
+    onModeChange: (com.iris.iriscode.domain.model.WorkMode) -> Unit,
     onEffortChange: (String) -> Unit,
     onThinkingChange: (Boolean) -> Unit,
     onWebSearchChange: (Boolean) -> Unit
@@ -392,16 +496,16 @@ private fun ExpandedPanel(
             text = "MODE",
             style = MaterialTheme.typography.labelSmall,
             color = IrisTextMuted,
-            letterSpacing = TextUnit(1.2f, TextUnitType.Sp)
+            letterSpacing = 1.2.sp
         )
         Spacer(modifier = Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            WorkMode.entries.forEach { mode ->
+            com.iris.iriscode.domain.model.WorkMode.entries.forEach { mode ->
                 val isActive = mode == workMode
                 val color = when (mode) {
-                    WorkMode.PLAN -> IrisPlan
-                    WorkMode.BUILD -> IrisBuild
-                    WorkMode.AUTO -> IrisAuto
+                    com.iris.iriscode.domain.model.WorkMode.PLAN -> IrisPlan
+                    com.iris.iriscode.domain.model.WorkMode.BUILD -> IrisBuild
+                    com.iris.iriscode.domain.model.WorkMode.AUTO -> IrisAuto
                 }
                 Box(
                     modifier = Modifier
@@ -454,78 +558,6 @@ private fun ExpandedPanel(
                 colors = SwitchDefaults.colors(checkedTrackColor = IrisPrimary)
             )
         }
-    }
-}
-
-@Composable
-private fun WorkModeChip(mode: WorkMode, onClick: () -> Unit) {
-    val bgColor by animateColorAsState(
-        targetValue = when (mode) {
-            WorkMode.PLAN -> IrisPlan
-            WorkMode.BUILD -> IrisBuild
-            WorkMode.AUTO -> IrisAuto
-        },
-        label = "modeColor"
-    )
-    val icon = when (mode) {
-        WorkMode.PLAN -> Lucide.Eye
-        WorkMode.BUILD -> Lucide.Hammer
-        WorkMode.AUTO -> Lucide.Zap
-    }
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor.copy(alpha = 0.15f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = bgColor,
-            modifier = Modifier.size(13.dp)
-        )
-        Text(
-            text = mode.displayName,
-            style = MaterialTheme.typography.labelMedium,
-            color = bgColor,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun ModelChip(label: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(IrisPrimary.copy(alpha = 0.12f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Icon(
-            imageVector = Lucide.BrainCircuit,
-            contentDescription = null,
-            tint = IrisPrimary,
-            modifier = Modifier.size(13.dp)
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = IrisPrimary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Icon(
-            imageVector = Lucide.ChevronDown,
-            contentDescription = null,
-            tint = IrisPrimary.copy(alpha = 0.6f),
-            modifier = Modifier.size(11.dp)
-        )
     }
 }
 

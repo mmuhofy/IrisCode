@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
@@ -37,14 +36,11 @@ import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.*
-import androidx.compose.ui.graphics.vector.ImageVector
 
 private sealed class Screen {
     object Onboarding : Screen()
     object Projects : Screen()
     data class Chat(val projectName: String, val projectId: Long) : Screen()
-    object Settings : Screen()
 }
 
 @AndroidEntryPoint
@@ -121,66 +117,12 @@ class MainActivity : ComponentActivity() {
                         ChatScreen(
                             viewModel = chatVm,
                             projectName = screen.projectName,
-                            onBack = { currentScreen = Screen.Projects },
-                            onSettings = { currentScreen = Screen.Settings }
-                        )
-                    }
-
-                    is Screen.Settings -> {
-                        PlaceholderScreen(
-                            title = "Settings",
-                            icon = Lucide.Settings,
                             onBack = { currentScreen = Screen.Projects }
                         )
                     }
+
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(
-    title: String,
-    icon: ImageVector,
-    onBack: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(com.iris.iriscode.ui.theme.IrisBackground)
-            .systemBarsPadding()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 20.dp, top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Lucide.ArrowLeft,
-                    contentDescription = "Back",
-                    tint = com.iris.iriscode.ui.theme.IrisText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = com.iris.iriscode.ui.theme.IrisTextSecondary
-            )
         }
     }
 }
