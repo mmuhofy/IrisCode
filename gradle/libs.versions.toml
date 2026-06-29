@@ -20,7 +20,6 @@ composeIconsLucide = "2.2.1"
 activityCompose = "1.9.2"
 hiltNavigationCompose = "1.2.0"
 documentfile = "1.0.1"
-firebaseAi = "17.13.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -79,9 +78,6 @@ lottie = { group = "com.airbnb.android", name = "lottie-compose", version.ref = 
 
 # Diff
 java-diff-utils = { group = "io.github.java-diff-utils", name = "java-diff-utils", version.ref = "diffUtils" }
-
-# AI
-firebase-ai = { group = "com.google.firebase", name = "firebase-ai", version.ref = "firebaseAi" }
 
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

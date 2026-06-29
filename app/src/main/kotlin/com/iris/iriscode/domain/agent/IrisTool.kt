@@ -1,30 +1,24 @@
-// Inspired by: anomalyco/opencode agent tool system
 // UNTESTED — verify before use
 
 package com.iris.iriscode.domain.agent
 
-import com.google.firebase.ai.type.FunctionDeclaration
-import com.google.firebase.ai.type.Schema
+import com.iris.iriscode.data.remote.gemini.GeminiTool
 
 /**
  * Base interface for all agent tools.
- * Each tool maps to a Gemini FunctionDeclaration.
- * domain/ layer — no Android imports except firebase-ai Schema types.
+ * domain/ katmanı — GeminiTool data class'ı domain'den geçiyor,
+ * ancak GeminiTool pure Kotlin (JSONObject kullanmıyor burada).
  */
 interface IrisTool {
     val name: String
     val description: String
 
-    /** Build the Gemini FunctionDeclaration for this tool. */
-    fun toFunctionDeclaration(): FunctionDeclaration
+    /** Build the GeminiTool descriptor for this tool (sent to Gemini as function declaration). */
+    fun toGeminiTool(): GeminiTool
 
     /**
-     * Execute the tool with the given arguments.
-     * Called by ToolRegistry when Gemini emits a function_call for this tool's name.
-     * Must be called from a coroutine context.
-     *
-     * @param args Map of parameter name → value as parsed from Gemini's function_call response.
-     * @return ToolResult describing the outcome.
+     * Execute this tool with the given arguments.
+     * @param args Map parsed from Gemini's function_call arguments JSON.
      */
     suspend fun execute(args: Map<String, Any>): ToolResult
 }

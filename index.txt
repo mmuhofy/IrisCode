@@ -1,8 +1,9 @@
 # Project Index & History: IrisCode
-> Generated at Commit/Time: 27e1a47
+> Generated at Commit/Time: 53bac6b
 
 ## Recent Commit History
 ```text
+53bac6b fix(dependecy): add missing dependecy to app/build.gradle.kts
 27e1a47 feat(domain): add IrisTool interface, ToolResult, AgentEvent sealed classes
 e1d67aa fix(ui): correct Lucide icon name in AskCard
 95f87fd fix(build): switch lucide dependency from android to cmp variant for ImageVector API
@@ -12,98 +13,97 @@ e60b9a3 fix: resolve CI build errors — missing imports and AnimatedVisibility 
 f392987 style(ui): comprehensive UI polish across all screens
 6ca9cd9 docs: update CHANGELOG.md
 47f4e92 fix(ui): add missing background import in AskCard
-99bdfb6 docs: update CHANGELOG.md
 ```
 
 ## .github/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.github/workflows/changelog.yml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.github/workflows/ci.yml?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.github/workflows/changelog.yml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.github/workflows/ci.yml?v=53bac6b
 
 ## app/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/build.gradle.kts?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/proguard-rules.pro?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/AndroidManifest.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/assets/eye_icon.lottie?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/IrisCodeApp.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/MainActivity.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/IrisDatabase.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/OnboardingPreferences.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/ProjectDao.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/repository/ProjectRepositoryImpl.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/di/AppModule.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/di/DatabaseModule.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/AgentEvent.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/IrisTool.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/ToolResult.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/ChatMessage.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/Project.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/WorkMode.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/repository/ProjectRepository.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/ChatScreen.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/ChatViewModel.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/AskCard.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/BashCard.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/DiffCard.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/MessageBubble.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/ModelSheet.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/SlashMenu.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/ApiKeyScreen.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/OnboardingViewModel.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/ProjectSetupScreen.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/WelcomeScreen.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/CreateProjectSheet.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/ProjectsScreen.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/ProjectsViewModel.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Color.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Theme.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Type.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/util/Constants.kt?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/drawable-v24/ic_launcher_foreground.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/drawable/ic_launcher_background.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-hdpi/ic_launcher.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-mdpi/ic_launcher.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xhdpi/ic_launcher.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/colors.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/strings.xml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/themes.xml?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/build.gradle.kts?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/proguard-rules.pro?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/AndroidManifest.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/assets/eye_icon.lottie?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/IrisCodeApp.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/MainActivity.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/IrisDatabase.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/OnboardingPreferences.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/local/ProjectDao.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/data/repository/ProjectRepositoryImpl.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/di/AppModule.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/di/DatabaseModule.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/AgentEvent.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/IrisTool.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/agent/ToolResult.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/ChatMessage.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/Project.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/model/WorkMode.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/domain/repository/ProjectRepository.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/ChatScreen.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/ChatViewModel.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/AskCard.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/BashCard.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/DiffCard.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/MessageBubble.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/ModelSheet.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/chat/components/SlashMenu.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/ApiKeyScreen.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/OnboardingViewModel.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/ProjectSetupScreen.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/onboarding/WelcomeScreen.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/CreateProjectSheet.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/ProjectsScreen.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/projects/ProjectsViewModel.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Color.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Theme.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/ui/theme/Type.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/kotlin/com/iris/iriscode/util/Constants.kt?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/drawable-v24/ic_launcher_foreground.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/drawable/ic_launcher_background.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-hdpi/ic_launcher.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-mdpi/ic_launcher.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xhdpi/ic_launcher.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/colors.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/strings.xml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/app/src/main/res/values/themes.xml?v=53bac6b
 
 ## docs/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/AGENT.md?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/TODO.md?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/memory-bank.md?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/AGENT.md?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/TODO.md?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/docs/memory-bank.md?v=53bac6b
 
 ## gradle/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/libs.versions.toml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/wrapper/gradle-wrapper.jar?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/wrapper/gradle-wrapper.properties?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/libs.versions.toml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/wrapper/gradle-wrapper.jar?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle/wrapper/gradle-wrapper.properties?v=53bac6b
 
 ## keystore/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/keystore/iriscode.keystore?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/keystore/iriscode.keystore?v=53bac6b
 
 ## root/
 
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.gitignore?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/CHANGELOG.md?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/LICENSE?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/build.gradle.kts?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/cliff.toml?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle.properties?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradlew?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradlew.bat?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/keystore.properties?v=27e1a47
-https://raw.githubusercontent.com/mmuhofy/IrisCode/main/settings.gradle.kts?v=27e1a47
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/.gitignore?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/CHANGELOG.md?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/LICENSE?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/build.gradle.kts?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/cliff.toml?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradle.properties?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradlew?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/gradlew.bat?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/keystore.properties?v=53bac6b
+https://raw.githubusercontent.com/mmuhofy/IrisCode/main/settings.gradle.kts?v=53bac6b
 
