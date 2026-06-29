@@ -33,6 +33,8 @@ import com.iris.iriscode.ui.onboarding.OnboardingStep
 import com.iris.iriscode.ui.onboarding.OnboardingViewModel
 import com.iris.iriscode.ui.projects.ProjectsScreen
 import com.iris.iriscode.ui.projects.ProjectsViewModel
+import com.iris.iriscode.ui.sessions.SessionListScreen
+import com.iris.iriscode.ui.sessions.SessionListViewModel
 import com.iris.iriscode.ui.theme.IrisCodeTheme
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
@@ -42,7 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 private sealed class Screen {
     object Onboarding : Screen()
     object Projects : Screen()
-    data class Chat(val projectName: String, val projectId: Long, val projectPath: String) : Screen()
+    data class SessionList(val projectName: String, val projectId: Long, val projectPath: String) : Screen()
+    data class Chat(val projectName: String, val projectId: Long, val projectPath: String, val sessionId: String? = null) : Screen()
 }
 
 @AndroidEntryPoint
@@ -64,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     onboardingVm.events.collect { event ->
                         when (event) {
                             is OnboardingEvent.ProjectCreated -> {
-                                currentScreen = Screen.Chat(event.name, event.id, event.path)
+                                currentScreen = Screen.SessionList(event.name, event.id, event.path)
                             }
                             is OnboardingEvent.NextStep -> { }
                         }
@@ -122,9 +125,27 @@ class MainActivity : ComponentActivity() {
                         ProjectsScreen(
                             viewModel = projectsVm,
                             onProjectClick = { project ->
-                                currentScreen = Screen.Chat(project.name, project.id, project.path)
+                                currentScreen = Screen.SessionList(project.name, project.id, project.path)
                             },
                             onCreateProject = { projectsVm.showCreateSheet() }
+                        )
+                    }
+
+                    is Screen.SessionList -> {
+                        val sessionVm: SessionListViewModel = hiltViewModel()
+                        LaunchedEffect(screen.projectId) {
+                            sessionVm.init(screen.projectName, screen.projectId, screen.projectPath)
+                        }
+                        SessionListScreen(
+                            viewModel = sessionVm,
+                            onSessionClick = { sessionId ->
+                                currentScreen = Screen.Chat(screen.projectName, screen.projectId, screen.projectPath, sessionId)
+                            },
+                            onNewSession = {
+                                val id = sessionVm.createSession()
+                                currentScreen = Screen.Chat(screen.projectName, screen.projectId, screen.projectPath, id)
+                            },
+                            onBack = { currentScreen = Screen.Projects }
                         )
                     }
 
@@ -134,7 +155,7 @@ class MainActivity : ComponentActivity() {
                             viewModel = chatVm,
                             projectName = screen.projectName,
                             projectPath = screen.projectPath,
-                            onBack = { currentScreen = Screen.Projects }
+                            onBack = { currentScreen = Screen.SessionList(screen.projectName, screen.projectId, screen.projectPath) }
                         )
                     }
 

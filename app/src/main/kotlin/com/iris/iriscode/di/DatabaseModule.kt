@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.room.Room
 import com.iris.iriscode.data.local.IrisDatabase
 import com.iris.iriscode.data.local.ProjectDao
+import com.iris.iriscode.data.local.SessionDao
 import com.iris.iriscode.data.repository.ProjectRepositoryImpl
+import com.iris.iriscode.data.repository.SessionRepositoryImpl
 import com.iris.iriscode.domain.repository.ProjectRepository
+import com.iris.iriscode.domain.repository.SessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,13 +27,20 @@ object DatabaseModule {
             context,
             IrisDatabase::class.java,
             "iris.db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
     fun provideProjectDao(database: IrisDatabase): ProjectDao = database.projectDao()
 
     @Provides
+    fun provideSessionDao(database: IrisDatabase): SessionDao = database.sessionDao()
+
+    @Provides
     @Singleton
     fun provideProjectRepository(impl: ProjectRepositoryImpl): ProjectRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideSessionRepository(impl: SessionRepositoryImpl): SessionRepository = impl
 }
