@@ -2,10 +2,14 @@ package com.iris.iriscode.ui.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iris.iriscode.data.local.OnboardingPreferences
+import com.iris.iriscode.data.remote.gemini.GeminiApi
+import com.iris.iriscode.data.remote.gemini.GeminiClient
+import com.iris.iriscode.data.remote.gemini.GeminiSseEvent
+import com.iris.iriscode.data.remote.gemini.GeminiStep
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +50,10 @@ data class ChatUiState(
 )
 
 @HiltViewModel
-class ChatViewModel @Inject constructor() : ViewModel() {
+class ChatViewModel @Inject constructor(
+    private val geminiClient: GeminiClient,
+    private val preferences: OnboardingPreferences
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
@@ -59,31 +66,110 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         val text = _state.value.inputText.trim()
         if (text.isEmpty() || _state.value.isProcessing) return
 
-        val message = ChatMessage.UserText(
-            id = UUID.randomUUID().toString(),
-            text = text
-        )
+        val apiKey = preferences.getApiKey()
+        if (apiKey.isNullOrBlank()) {
+            val errorMsg = ChatMessage.AgentText(
+                id = UUID.randomUUID().toString(),
+                text = "Please set your Gemini API key in settings to start chatting."
+            )
+            _state.value = _state.value.copy(messages = _state.value.messages + errorMsg)
+            return
+        }
+
+        val userMsg = ChatMessage.UserText(id = UUID.randomUUID().toString(), text = text)
+        val agentMsgId = UUID.randomUUID().toString()
+        val pendingMsg = ChatMessage.AgentText(id = agentMsgId, text = "")
 
         _state.value = _state.value.copy(
-            messages = _state.value.messages + message,
+            messages = _state.value.messages + userMsg + pendingMsg,
             inputText = "",
             isProcessing = true,
             isTyping = true
         )
 
         viewModelScope.launch {
-            delay(800)
-            _state.value = _state.value.copy(isTyping = false)
-            delay(200)
-            val response = ChatMessage.AgentText(
-                id = UUID.randomUUID().toString(),
-                text = "I received: \"$text\""
-            )
-            _state.value = _state.value.copy(
-                messages = _state.value.messages + response,
-                isProcessing = false
-            )
+            val history = buildHistory(_state.value.messages, agentMsgId)
+            history.add(GeminiStep.UserInput(text))
+
+            val modelName = when (_state.value.currentModel) {
+                "flash" -> GeminiApi.MODEL_FLASH
+                "pro" -> "gemini-2.5-pro"
+                else -> GeminiApi.MODEL_FLASH
+            }
+
+            val responseText = StringBuilder()
+            var hasContent = false
+
+            geminiClient.streamInteraction(
+                apiKey = apiKey,
+                model = modelName,
+                history = history,
+                tools = emptyList(),
+                systemPrompt = "You are Iris, a helpful coding assistant."
+            ).collect { event ->
+                when (event) {
+                    is GeminiSseEvent.TextDelta -> {
+                        hasContent = true
+                        responseText.append(event.text)
+                        replaceMessage(agentMsgId, responseText.toString())
+                    }
+                    is GeminiSseEvent.InteractionCompleted -> {
+                        if (!hasContent) {
+                            replaceMessage(agentMsgId, "Hello! I'm Iris. How can I help you code?")
+                        }
+                        _state.value = _state.value.copy(
+                            isProcessing = false,
+                            isTyping = false
+                        )
+                    }
+                    is GeminiSseEvent.StreamError -> {
+                        removeMessage(agentMsgId)
+                        val errorMsg = ChatMessage.AgentText(
+                            id = UUID.randomUUID().toString(),
+                            text = "Error: ${event.message}"
+                        )
+                        _state.value = _state.value.copy(
+                            messages = _state.value.messages + errorMsg,
+                            isProcessing = false,
+                            isTyping = false
+                        )
+                    }
+                    else -> Unit
+                }
+            }
         }
+    }
+
+    private fun buildHistory(messages: List<ChatMessage>, excludeId: String): MutableList<GeminiStep> {
+        val steps = mutableListOf<GeminiStep>()
+        for (msg in messages) {
+            if (msg.id == excludeId) continue
+            when (msg) {
+                is ChatMessage.UserText -> steps.add(GeminiStep.UserInput(msg.text))
+                is ChatMessage.AgentText -> {
+                    if (msg.text.isNotBlank()) {
+                        steps.add(GeminiStep.ModelOutput(msg.text))
+                    }
+                }
+                else -> Unit
+            }
+        }
+        return steps
+    }
+
+    private fun replaceMessage(id: String, text: String) {
+        val updated = _state.value.messages.map { msg ->
+            if (msg is ChatMessage.AgentText && msg.id == id) {
+                msg.copy(text = text)
+            } else msg
+        }
+        _state.value = _state.value.copy(messages = updated)
+    }
+
+    private fun removeMessage(id: String) {
+        _state.value = _state.value.copy(
+            messages = _state.value.messages.filter { it.id != id }
+        )
     }
 
     fun setWorkMode(mode: WorkMode) {
@@ -104,9 +190,8 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             "plan" -> setWorkMode(WorkMode.PLAN)
             "build" -> setWorkMode(WorkMode.BUILD)
             "auto" -> setWorkMode(WorkMode.AUTO)
-            "models" -> { /* handled by dropdown */ }
+            "models" -> { }
             "new" -> clearChat()
-            "settings" -> { /* navigate to settings */ }
             else -> {
                 val message = ChatMessage.UserText(
                     id = UUID.randomUUID().toString(),
@@ -187,17 +272,6 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             } else msg
         }
         _state.value = _state.value.copy(messages = updated)
-
-        viewModelScope.launch {
-            delay(500)
-            val response = ChatMessage.AgentText(
-                id = UUID.randomUUID().toString(),
-                text = "Thanks for your answer: \"$answer\""
-            )
-            _state.value = _state.value.copy(
-                messages = _state.value.messages + response
-            )
-        }
     }
 
     private fun clearChat() {
