@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- (nothing yet)
+
+## [0.2.0] - 2026-06-29
+
 ### Features
 - **agent**: implement AgentLoop — streaming tool call loop with approval suspension
 - **agent**: add ToolRegistry + 4 tool implementations (read_file, write_file, bash, ask_user)
