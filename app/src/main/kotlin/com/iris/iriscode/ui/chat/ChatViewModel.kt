@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.iris.iriscode.data.local.OnboardingPreferences
 import com.iris.iriscode.data.remote.gemini.GeminiApi
 import com.iris.iriscode.data.remote.gemini.GeminiClient
-import com.iris.iriscode.data.remote.gemini.GeminiSseEvent
-import com.iris.iriscode.data.remote.gemini.GeminiStep
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,9 +86,6 @@ class ChatViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            val history = buildHistory(_state.value.messages, agentMsgId)
-            history.add(GeminiStep.UserInput(text))
-
             val modelName = when (_state.value.currentModel) {
                 "flash" -> GeminiApi.MODEL_FLASH
                 "pro" -> "gemini-2.5-pro"
@@ -99,62 +94,40 @@ class ChatViewModel @Inject constructor(
 
             val responseText = StringBuilder()
             var hasContent = false
+            var isError = false
 
-            geminiClient.streamInteraction(
+            geminiClient.streamChat(
                 apiKey = apiKey,
                 model = modelName,
-                history = history,
-                tools = emptyList(),
+                history = _state.value.messages,
                 systemPrompt = "You are Iris, a helpful coding assistant."
-            ).collect { event ->
-                when (event) {
-                    is GeminiSseEvent.TextDelta -> {
-                        hasContent = true
-                        responseText.append(event.text)
-                        replaceMessage(agentMsgId, responseText.toString())
-                    }
-                    is GeminiSseEvent.InteractionCompleted -> {
-                        if (!hasContent) {
-                            replaceMessage(agentMsgId, "Hello! I'm Iris. How can I help you code?")
-                        }
-                        _state.value = _state.value.copy(
-                            isProcessing = false,
-                            isTyping = false
-                        )
-                    }
-                    is GeminiSseEvent.StreamError -> {
-                        removeMessage(agentMsgId)
-                        val errorMsg = ChatMessage.AgentText(
-                            id = UUID.randomUUID().toString(),
-                            text = "Error: ${event.message}"
-                        )
-                        _state.value = _state.value.copy(
-                            messages = _state.value.messages + errorMsg,
-                            isProcessing = false,
-                            isTyping = false
-                        )
-                    }
-                    else -> Unit
+            ).collect { delta ->
+                if (delta.startsWith("\n\n[") && (delta.contains("Error") || delta.contains("error"))) {
+                    isError = true
+                    responseText.append(delta.trimStart('\n'))
+                } else {
+                    hasContent = true
+                    responseText.append(delta)
                 }
+                replaceMessage(agentMsgId, responseText.toString())
             }
-        }
-    }
 
-    private fun buildHistory(messages: List<ChatMessage>, excludeId: String): MutableList<GeminiStep> {
-        val steps = mutableListOf<GeminiStep>()
-        for (msg in messages) {
-            if (msg.id == excludeId) continue
-            when (msg) {
-                is ChatMessage.UserText -> steps.add(GeminiStep.UserInput(msg.text))
-                is ChatMessage.AgentText -> {
-                    if (msg.text.isNotBlank()) {
-                        steps.add(GeminiStep.ModelOutput(msg.text))
-                    }
-                }
-                else -> Unit
+            if (isError && !hasContent) {
+                removeMessage(agentMsgId)
+                val errorMsg = ChatMessage.AgentText(
+                    id = UUID.randomUUID().toString(),
+                    text = responseText.toString().trimStart('\n')
+                )
+                _state.value = _state.value.copy(
+                    messages = _state.value.messages + errorMsg
+                )
             }
+
+            _state.value = _state.value.copy(
+                isProcessing = false,
+                isTyping = false
+            )
         }
-        return steps
     }
 
     private fun replaceMessage(id: String, text: String) {
