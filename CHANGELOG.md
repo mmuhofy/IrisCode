@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- **ui:** Status bar transparency, input bar border, + sheet -> ModalBottomSheet
+
+
+
 - Resolve build errors - sealed class syntax, KeyboardActions type, lucide import
 
 
@@ -67,6 +71,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
