@@ -100,7 +100,7 @@ No bottom navigation bar. Linear hierarchy:
 ```text
 Projects (Home)
   → [project card]  → Session List
-                       → [session]  → Chat ↔ Terminal (tab)
+                       → [session]  → Chat (tabs: Chat / Terminal / Files) ↔ Terminal
                        → [+]        → Create → Chat
   → [+]             → Create → Chat
   → [⚙️]            → Settings (top right, every screen)
@@ -108,7 +108,8 @@ Projects (Home)
 
 - `←` back always returns to previous screen
 - `[+]` top right = new session, available on every screen
-- Tab bar (Chat / Terminal) only inside Chat screen, top position
+- Tab bar (Chat / Terminal / Files) inside Chat screen, top position, seamless background
+- Overflow menu `[⋮]` top right on Chat screen: Settings, New Session, Export Session
 - Settings icon top right on every screen
 
 ---
@@ -127,10 +128,10 @@ Projects (Home)
 - Long press → Export session (markdown)
 
 ### Chat
-- Toolbar: `←` · project name · branch · `[+]` · `[⚙️]`
-- Model chip + status text inline in toolbar right side
-- Status: shown as inline agent message in chat ("◐ Reading auth.ts...")
-- Tab bar top: `[💬 Chat]` `[💻 Terminal]`
+- Toolbar: `←` · project name · branch · `[⋮]` · `[⚙️]`
+- Model chip centered (pill, border + press animation + caret rotation)
+- Status: inline agent message in chat ("◐ Reading auth.ts...")
+- Tab bar top (inside rounded content area): `[💬 Chat]` `[💻 Terminal]` `[📁 Files]`
 - Full-width messages, no bubbles
 - User message: right-aligned card, gold left border
 - Agent message: left-aligned, no card, text on background
