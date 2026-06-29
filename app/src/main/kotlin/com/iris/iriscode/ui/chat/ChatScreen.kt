@@ -2,8 +2,8 @@ package com.iris.iriscode.ui.chat
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
@@ -19,11 +19,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.components.FilesTab
 import com.iris.iriscode.ui.chat.components.MessageBubble
@@ -195,65 +199,53 @@ private fun TopBar(
     onModelDismiss: () -> Unit,
     onModelSelect: (String) -> Unit
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Lucide.ArrowLeft,
-                contentDescription = "Back",
-                tint = IrisText,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Text(
-            text = projectName,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .background(IrisOutline)
-                .padding(horizontal = 6.dp, vertical = 2.dp)
+        // Left: back + name + branch
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "main",
-                style = MaterialTheme.typography.labelSmall,
-                color = IrisTextSecondary
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable(onClick = onModelClick)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = currentModel,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = IrisTextSecondary
-                )
-                Spacer(modifier = Modifier.width(3.dp))
+            IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = Lucide.ChevronDown,
-                    contentDescription = "Change model",
-                    tint = IrisTextMuted,
-                    modifier = Modifier.size(12.dp)
+                    imageVector = Lucide.ArrowLeft,
+                    contentDescription = "Back",
+                    tint = IrisText,
+                    modifier = Modifier.size(20.dp)
                 )
             }
+
+            Text(
+                text = projectName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(IrisOutline)
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "main",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = IrisTextSecondary
+                )
+            }
+        }
+
+        // Center: model chip
+        Box(modifier = Modifier.align(Alignment.Center)) {
+            ModelChip(
+                modelName = currentModel,
+                expanded = modelDropdownExpanded,
+                onClick = onModelClick
+            )
 
             DropdownMenu(
                 expanded = modelDropdownExpanded,
@@ -303,6 +295,63 @@ private fun TopBar(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ModelChip(
+    modelName: String,
+    expanded: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = tween(100),
+        label = "chipScale"
+    )
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50.dp),
+        color = Color.Transparent,
+        border = BorderStroke(
+            width = if (expanded) 1.5.dp else 1.dp,
+            color = if (expanded) IrisPrimary.copy(alpha = 0.5f)
+                    else IrisText.copy(alpha = 0.18f),
+        ),
+        interactionSource = interactionSource,
+        modifier = Modifier.scale(pressScale)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = modelName.split("-").joinToString(" ") { part ->
+                    part.replaceFirstChar { if (it.isLowerCase()) it.uppercase() else it.toString() }
+                },
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.2.sp
+                ),
+                color = IrisText.copy(alpha = 0.8f),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                imageVector = Lucide.ChevronDown,
+                contentDescription = "Change model",
+                tint = IrisText.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .size(14.dp)
+                    .graphicsLayer {
+                        rotationX = if (expanded) 180f else 0f
+                    }
+            )
         }
     }
 }
