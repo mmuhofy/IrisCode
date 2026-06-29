@@ -92,9 +92,11 @@ class GeminiClient @Inject constructor() {
     ): JSONObject = JSONObject().apply {
         put("contents", contents)
         if (tools.isNotEmpty()) {
-            val toolsArray = JSONArray()
-            tools.forEach { toolsArray.put(it.toJson()) }
-            put("tools", toolsArray)
+            val functionDeclarations = JSONArray()
+            tools.forEach { functionDeclarations.put(it.toFunctionDeclaration()) }
+            put("tools", JSONArray().put(JSONObject().apply {
+                put("functionDeclarations", functionDeclarations)
+            }))
         }
         if (!systemPrompt.isNullOrBlank()) {
             put("system_instruction", JSONObject().apply {

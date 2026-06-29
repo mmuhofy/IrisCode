@@ -88,16 +88,19 @@ sealed class GeminiStep {
 }
 
 /**
- * Tool definition sent to Gemini.
- * Corresponds to a FunctionDeclaration in the Interactions API.
+ * A single function declaration inside the GenerateContent API tools array.
+ * See: https://ai.google.dev/api/caching#FunctionDeclaration
  */
 data class GeminiTool(
     val name: String,
     val description: String,
     val parameters: GeminiToolParameters
 ) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("type", "function")
+    /**
+     * Returns the function declaration JSON (no wrapping).
+     * The caller wraps this in `functionDeclarations` array.
+     */
+    fun toFunctionDeclaration(): JSONObject = JSONObject().apply {
         put("name", name)
         put("description", description)
         put("parameters", parameters.toJson())
