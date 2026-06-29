@@ -1,5 +1,6 @@
 package com.iris.iriscode.ui.onboarding
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,11 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.ui.theme.IrisBackground
-import com.iris.iriscode.ui.theme.IrisOutline
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSuccess
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
@@ -43,12 +44,15 @@ fun ProjectSetupScreen(
     onProjectPathSelected: (String) -> Unit,
     onNext: () -> Unit
 ) {
+    val context = LocalContext.current
     var selectedPath by remember { mutableStateOf(projectPath) }
 
     val folderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         uri?.let {
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            context.contentResolver.takePersistableUriPermission(it, flags)
             val path = uri.path?.split(":")?.lastOrNull()
             if (path != null) {
                 selectedPath = "/storage/emulated/0/$path"
