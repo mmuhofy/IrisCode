@@ -8,6 +8,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Resolve build errors - sealed class syntax, KeyboardActions type, lucide import
+
+
+
 - **dependecy:** Add missing dependecy to app/build.gradle.kts
 
 
@@ -63,6 +67,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Documentation
+
+
+
+- Update CHANGELOG.md
 
 
 
