@@ -38,18 +38,7 @@ class GeminiClient @Inject constructor() {
 
         val url = "${GeminiApi.BASE_URL}/models/${model}:streamGenerateContent?alt=sse&key=$apiKey"
 
-        val contents = JSONArray()
-        for (msg in history) {
-            val role = when (msg) {
-                is ChatMessage.UserText -> "user"
-                is ChatMessage.AgentText -> if (msg.text.isEmpty()) continue else "model"
-                else -> continue
-            }
-            contents.put(JSONObject().apply {
-                put("role", role)
-                put("parts", JSONArray().put(JSONObject().put("text", msg.text)))
-            })
-        }
+        val contents = buildContents(history)
 
         val body = JSONObject().apply {
             put("contents", contents)
@@ -130,4 +119,82 @@ class GeminiClient @Inject constructor() {
     ): Flow<String> = streamChat(apiKey, model, listOf(
         ChatMessage.UserText(id = "prompt", text = prompt)
     ), systemPrompt)
+
+    fun streamInteraction(
+        apiKey: String,
+        model: String = GeminiApi.MODEL_FLASH,
+        history: List<GeminiStep>,
+        tools: List<GeminiTool>,
+        systemPrompt: String? = null
+    ): Flow<GeminiSseEvent> = callbackFlow {
+
+        val chatHistory = history.mapNotNull { step ->
+            when (step) {
+                is GeminiStep.UserInput -> ChatMessage.UserText(
+                    id = step.text.hashCode().toString(), text = step.text
+                )
+                is GeminiStep.ModelOutput -> if (step.text.isNotBlank()) ChatMessage.AgentText(
+                    id = step.text.hashCode().toString(), text = step.text
+                ) else null
+                is GeminiStep.FunctionCall -> ChatMessage.AgentText(
+                    id = step.id, text = "[Function call: ${step.name}]"
+                )
+                is GeminiStep.FunctionResult -> ChatMessage.AgentText(
+                    id = step.callId, text = "[Function result: ${step.name}]"
+                )
+            }
+        }
+
+        var fullText = StringBuilder()
+        var error: String? = null
+
+        streamChat(
+            apiKey = apiKey,
+            model = model,
+            history = chatHistory,
+            systemPrompt = systemPrompt
+        ).collect { delta ->
+            if (delta.startsWith("\n\n[")) {
+                error = delta.trimStart('\n')
+            } else {
+                fullText.append(delta)
+                trySend(GeminiSseEvent.TextDelta(delta))
+            }
+        }
+
+        if (error != null) {
+            trySend(GeminiSseEvent.StreamError(error!!))
+        } else {
+            trySend(GeminiSseEvent.InteractionCompleted(
+                toolCalls = emptyList(),
+                inputTokens = 0,
+                outputTokens = fullText.length
+            ))
+        }
+    }
+
+    private fun buildContents(history: List<ChatMessage>): JSONArray {
+        val contents = JSONArray()
+        for (msg in history) {
+            val role: String
+            val text: String
+            when (msg) {
+                is ChatMessage.UserText -> {
+                    role = "user"
+                    text = msg.text
+                }
+                is ChatMessage.AgentText -> {
+                    if (msg.text.isEmpty()) continue
+                    role = "model"
+                    text = msg.text
+                }
+                else -> continue
+            }
+            contents.put(JSONObject().apply {
+                put("role", role)
+                put("parts", JSONArray().put(JSONObject().put("text", text)))
+            })
+        }
+        return contents
+    }
 }
