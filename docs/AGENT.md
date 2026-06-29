@@ -182,7 +182,7 @@ ToolResult (Success | Error | Cancelled | AwaitingApproval)
 | Navigation | Navigation Compose | via BOM |
 | Local DB | Room | `2.x` stable |
 | Async | Kotlin Coroutines + Flow | confirm in `libs.versions.toml` |
-| LLM (v1.0) | Gemini 2.5 Flash | Google GenAI SDK |
+| LLM (v1.0) | Gemini 2.5 Flash | Google Rest API |
 | LLM (v1.1+) | + Anthropic, OpenAI | — |
 | HTTP/Stream | OkHttp + SSE | `4.x` stable |
 | Diff | `java-diff-utils` + `git diff` | fallback strategy |

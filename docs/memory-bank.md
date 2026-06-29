@@ -1,5 +1,5 @@
 # Iris Code — Memory Bank
-_Last updated: 2026-06-28 — Session 1: Project Setup completed_
+_Last updated: 2026-06-29_
 
 ---
 
@@ -11,19 +11,19 @@ _Last updated: 2026-06-28 — Session 1: Project Setup completed_
 | Package | `com.iris.iriscode` |
 | Tagline | "Code anywhere. Agent-powered." |
 | License | MIT |
-| Distribution | F-Droid + signed APK (GitHub Releases) |
-| Repo | TBD — to be created |
+| Distribution | F-Droid first, Play Store later |
+| Repo | github.com/mmuhofy/IrisCode |
 
 ---
 
 ## Vision
 
 Android-native, standalone agentic coding environment.
-Mobile version of Claude Code / OpenCode — but with an independent agent core.
-Built for Termux power users and mobile developers.
-Runs locally on the phone without any external server infrastructure.
-User gives instructions → agent writes → user approves the diff.
-No code editor. User strictly acts as a reviewer.
+Claude Code / OpenCode'un mobil versiyonu — ama bağımsız agent core ile.
+Termux power user ve mobil geliştiriciler için.
+Dışarıda hiçbir server çalışmadan, telefonun kendisinde çalışır.
+Kullanıcı talimat verir → agent yazar → kullanıcı diff'i approve eder.
+Kod editörü yok. Kullanıcı reviewer rolünde.
 
 ---
 
@@ -48,6 +48,7 @@ No code editor. User strictly acts as a reviewer.
 | IPC | Unix Domain Socket (v1.2) |
 | Loading Anim | Lottie |
 | Architecture | MVVM + Clean Architecture |
+| Session Search | SQLite FTS5 (Room) |
 
 ---
 
@@ -55,21 +56,32 @@ No code editor. User strictly acts as a reviewer.
 
 | Element | Value |
 |---------|-------|
-| Color scheme | Dark Purple / Violet |
-| Background | `#0D0D14` |
-| Surface | `#13131F` |
-| Primary | `#7C3AED` (violet-600) |
-| Accent | `#A78BFA` (violet-400) |
-| Text | `#F4F4F5` |
-| Subtle text | `#71717A` |
+| Color scheme | Near-black + Warm Gold |
+| Background | `#0C0C0C` |
+| Surface | `#141414` |
+| Surface 2 | `#1A1A1A` |
+| Border | `#1E1E1E` |
+| Border subtle | `#232323` |
+| Primary accent | `#E8C547` (warm gold) |
+| Text primary | `#EEEEEE` |
+| Text secondary | `#888888` |
+| Text muted | `#666666` |
+| Text disabled | `#444444` |
+| Success | `#27AE60` |
+| Error | `#C0392B` |
+| Warning | `#C9A84C` |
 | Code font | JetBrains Mono |
 | UI font | Inter / system |
-| Loading | Lottie — stylized eye, slow blink, violet glow, "Iris Code" fade in |
+| Corner radius | 14dp cards, 12dp buttons, 8dp chips |
+| Loading | Lottie — geometric eye mid-blink, gold iris glow, "Iris Code" fade in |
+| App icon | Stylized "I" + terminal cursor concept (TBD final) |
+| Theme | Dark only (Light v1.1, Theme Store v2) |
 
 ---
 
 ## Architecture Layers
 
+```text
 ui/        → Compose screens, ViewModels
 domain/    → Use cases, interfaces, IrisTool — pure Kotlin
 data/      → Room, Gemini API client, repo implementations
@@ -77,142 +89,373 @@ agent/     → Agent loop, ToolRegistry, compaction, streaming
 terminal/  → PTY session, terminal emulator bridge
 di/        → Hilt modules
 util/      → Constants, extensions
+```
 
 ---
 
-## Core Features
+## Navigation Architecture
+
+No bottom navigation bar. Linear hierarchy:
+
+```text
+Projects (Home)
+  → [project card]  → Session List
+                       → [session]  → Chat ↔ Terminal (tab)
+                       → [+]        → Create → Chat
+  → [+]             → Create → Chat
+  → [⚙️]            → Settings (top right, every screen)
+```
+
+- `←` back always returns to previous screen
+- `[+]` top right = new session, available on every screen
+- Tab bar (Chat / Terminal) only inside Chat screen, top position
+- Settings icon top right on every screen
+
+---
+
+## Screen Inventory
+
+### Projects (Home)
+- Project cards: name, path, last session summary, branch, session count, timestamp
+- Gold left border accent on each card
+- Long press card → context menu: Rename, Delete
+- Empty state: blinking `█` cursor + "No projects yet."
+
+### Session List
+- Grouped by date (Today, Yesterday, older)
+- Each row: session summary, tool call count, duration, cost, timestamp
+- Long press → Export session (markdown)
+
+### Chat
+- Toolbar: `←` · project name · branch · `[+]` · `[⚙️]`
+- Model chip + status text inline in toolbar right side
+- Status: shown as inline agent message in chat ("◐ Reading auth.ts...")
+- Tab bar top: `[💬 Chat]` `[💻 Terminal]`
+- Full-width messages, no bubbles
+- User message: right-aligned card, gold left border
+- Agent message: left-aligned, no card, text on background
+- Cards: BashCard, DiffCard, AskCard, TodoCard, CodeCard, ReadFileCard
+
+### Terminal
+- User-only (agent cannot write here)
+- Opens in project directory
+- Gold prompt color
+- Agent bash output → BashCard in chat, NOT here
+
+### Create
+- Accessible from `[+]` on any screen
+- Optional path input top
+- Large multiline input center: "What do you want to build?"
+- Send → session starts, Chat opens
+
+### Settings
+- API key management (per provider)
+- Default model selection
+- Work Mode default
+- Auto-approve writes toggle (OFF default)
+- Auto-run bash toggle (OFF default)
+- Voice input language
+- Global Rules editor
+- Theme: Dark / Light
+- About: version, license, GitHub
+
+---
+
+## Chat Cards
+
+### BashCard
+- Header: "bash" label gold monospace + copy icon
+- Command line: gold monospace
+- Output: gray monospace, success green, error red
+- Short (≤8 lines): show fully
+- Long (>8 lines): collapse + "Show X more lines ↓"
+- Very long (50+ lines): "Open in full screen ↑"
+
+### DiffCard
+- Header: "write_file" gold + filename + "+X −Y" green/red
+- Small diff (≤20 lines): inline full
+- Medium (20–50 lines): collapse + "Show X more ↓"
+- Large (50+ lines): "Open full diff ↑" → full screen bottom sheet
+- Full screen: scrollable diff + Approve/Reject bottom bar
+- Approve → card fades green → "✓ Applied" → collapses
+- Reject → card flashes red → "✕ Rejected" → agent notified
+
+### AskCard
+- Question text
+- Options listed vertically (radio style)
+- Free text input always available below options
+- Select option → fills input, user can edit
+- Confirm → card locks, shows "✓ [answer]"
+
+### TodoCard
+- Header: checklist icon + "Plan" + "3/5" counter + mini dots
+- Steps with status icons: ✓ ◐ ○ ✕ ⊘
+- Active step: gold pulse animation, warm row tint
+- Progress bar: gold fill, percentage right
+- 6+ steps: collapsed by default, tap to expand
+- Completed: green header + "Plan completed" + collapses to summary
+- Error: red ✕ + error message inline + "⚠ Stopped" if halted
+
+### CodeCard
+- Language label top left gold monospace
+- Copy button top right
+- Syntax highlighted code
+- Collapse if long
+
+### ReadFileCard
+- Triggered by @ mention long press
+- Filename header + close button
+- Scrollable syntax highlighted content
+- "X lines · Language" footer
+
+---
+
+## Agent Core
+
+### Tool Set (MVP — minimal by design)
+
+```text
+read_file      → reads file into agent context
+write_file     → triggers DiffApproveEvent
+bash           → PTY execution → BashCard in chat
+ask_user       → AskCard in chat, blocks until answered
+plan           → creates TodoCard, called first on complex tasks
+update_todo    → updates TodoCard step status live
+```
+
+Philosophy: terminal varsa tool'a gerek yok. grep, ls, git → terminal'den.
 
 ### Work Mode
-Three modes, switchable from toolbar chip or `/mode` slash command:
 
-| Mode  | Behavior |
-|-------|----------|
-| PLAN  | Read-only. Agent analyzes and suggests. write_file + bash disabled. |
-| BUILD | Full tool use. write_file + bash active. Diff/Approve flow on. Default. |
-| AUTO  | BUILD + both autonomy toggles forced ON. Agent writes and runs without asking. |
+| Mode | Behavior |
+|------|----------|
+| PLAN | Read-only. Agent suggests only. write_file + bash disabled. |
+| BUILD | Full tool use. Diff/Approve flow active. Default. |
+| AUTO | BUILD + both autonomy toggles forced ON. Session-scoped only. |
 
-UI: Toolbar chip `[ PLAN | BUILD | AUTO ]` + `/mode plan`, `/mode build`, `/mode auto` slash commands.
-
-### In-Chat Model Switcher
-- Toolbar shows current model name (short): `[flash ▾]`
-- Tap → opens model bottom sheet (same as `/models`)
-- Toolbar layout:
-  `← [Project Name ▾]  [BUILD]  [flash ▾]`
-
-### Agent Chat
-- Gemini 2.5 Flash, tool use loop
-- BYO API Key (encrypted DataStore)
-- Per-project session history
-- Compaction pipeline (auto, token threshold)
-- `/info` card: tokens used, cost estimate, compaction remaining, model, duration, tool calls
-
-### Tool Set (MVP — minimal)
-
-read_file    → agent reads file into context
-write_file   → triggers DiffApproveEvent
-bash         → PTY execution, BashCard in chat
-ask_user     → AskCard in chat, blocks until answered
-
-Philosophy: If there is a terminal, no tool is needed. grep, ls, git → done via terminal.
+Switchable: input bar chip or `/mode` slash command.
 
 ### Autonomy Toggles (Settings)
 - "Auto-approve file writes" (OFF default)
 - "Auto-run bash commands" (OFF default)
+- AUTO mode forces both ON for session duration, not persisted
 
-### Chat Cards
-- `BashCard` → command + live output
-- `DiffCard` → unified diff green/red + Approve / Reject
-- `AskCard` → question + input or option buttons
-- `ReadFileCard` → file preview (@ mention long press)
+### Agent While Working — Input Bar Behavior
+- Input bar stays active (user can type next message)
+- Send button becomes swipe-up gesture → queues message
+- "⏱ 1 message queued" indicator shown
+- Stop button appears replacing send
+- Stop → agent finishes current tool, then stops → "● Stopped by user"
 
-### Terminal Tab
-- User-only (agent cannot write here)
-- Opens in project directory
-- Agent bash output → BashCard in chat, NOT terminal tab
+### Compaction Pipeline
+- Auto-triggered at ~75% context window
+- Cheap model call to summarize old context
+- User sees no interruption
+- `/info` shows remaining tokens before next compaction
 
-### Navigation
+### Error Handling
+- Model logic error → agent self-recovers, no retry button
+- Server/connection error → exponential backoff + retry button
+- Agent timeout (no response) → retry button
+- Message undo → available as feature
 
-[ 📁 Projects ]  [ + Create ]  [ ⚙️ ]
+### Session Behavior
+- Background: session pauses, resumes on return
+- Export: markdown format
+- Search: SQLite FTS5 across all sessions
 
-### Slash Menu
+---
 
-/models    → model switcher
+## Input Bar
+
+Two-layer layout, always expanded (2–3 line height):
+
+```text
+┌─────────────────────────────────────┐
+│  Message Iris...                    │
+│  (multiline, expands upward)        │
+├─────────────────────────────────────┤
+│  [/]  [+]  [🎤]      [Effort] [▲] │
+└─────────────────────────────────────┘
+```
+
+Send button swipe-up → queue message while agent working.
+
+"+" expands panel upward:
+- Session info strip (tokens, cost, compaction remaining) — tappable for /info
+- Mode selector: PLAN / BUILD / AUTO pills
+- Effort selector: Low / Med / High pills (disabled when Thinking OFF)
+- Thinking toggle
+- Web Search toggle
+- Attach: File / Image / Camera
+
+### Slash Menu (`/`)
+
+```text
+/models    → model switcher bottom sheet
 /auth      → API key management
-/info      → token/session info card
+/info      → token/session info card in chat
 /new       → new session
-/history   → session history
+/history   → session list
 /git       → git bottom sheet
 /mcp       → MCP server list
 /settings  → settings screen
+/mode      → work mode switcher
+```
 
-### Command Palette
-- Tap project name in toolbar → bottom sheet
-- Fuzzy search
-- Short press → @ mention in chat
-- Long press → file content preview
+### Voice Input
+- Mic icon `[🎤]` in input bar
+- Hold to record (push-to-talk)
+- Release → Whisper API → transcript in input field
+- Auto-send option in settings
+- Language: settings configurable
 
-### Compaction Pipeline
-- Auto-triggered by token threshold (~75% of context window)
-- Cheap model call to summarize
-- User sees no interruption
+---
 
-### MCP Client
+## Keyboard Shortcuts (External Keyboard)
+
+```text
+Cmd+Enter  → send message
+Cmd+K      → command palette
+Escape     → stop agent
+```
+
+---
+
+## Command Palette
+- Triggered by tapping project name in toolbar
+- Bottom sheet, smooth open, always focused
+- Fuzzy search ("mago" → "main.go")
+- Gold cursor, always active border
+- Short press → add as @ mention
+- Long press → preview file (ReadFileCard)
+- Shows recent files when empty
+
+---
+
+## Haptic Feedback
+
+```text
+Approve        → success haptic (medium)
+Reject         → error haptic (short, sharp)
+Agent done     → light haptic
+Queue added    → light tick
+Send           → minimal tick
+```
+
+---
+
+## Security & Privacy
+
+### .irisignore
+- Syntax identical to .gitignore
+- Auto-created on project creation with defaults: `.env`, `.env.*`
+- Protected files: agent cannot delete or overwrite
+- Shows warning in DiffCard/BashCard if attempted
+
+### Deletion Protection
+- Any `rm` / `unlink` / `rmdir` → always shows special confirm card
+- Even in AUTO mode
+- Lists files to be deleted
+- .irisignore protected files shown greyed, excluded
+- Delete button always #C0392B regardless of mode
+
+### API Keys
+- Stored encrypted via androidx.security:security-crypto
+- Never logged, never sent except to provider
+- Per-provider storage
+
+---
+
+## Project Memory (.iris/)
+
+```text
+.iris/
+  memory.md        → agent reads + updates each session
+                     project context, tech stack, decisions
+  rules.md         → user-defined agent rules
+                     project-level, overrides global rules
+  sessions/
+    2026-06-28-001.md  → session summary (auto-generated)
+```
+
+Global rules → Settings → "Global Rules" editor
+Project rules → .iris/rules.md
+Priority: project rules > global rules
+
+---
+
+## MCP Client
 - HTTP/SSE based
 - Managed in Settings
 - Agent uses automatically
 - v1.2 milestone
 
-### IPC (Terminal → UI)
+## IPC (Terminal → UI)
 - Unix socket server in app
-- `/open_settings`, `/open_diff`, etc. from terminal
+- `/open_settings`, `/open_diff` etc. from terminal
 - v1.2 milestone
 
 ---
 
-## Onboarding (First Launch Only)
+## Onboarding (3 Steps, First Launch Only)
+1. Splash / Welcome — logo + Lottie animation + tagline
+2. API Key — Gemini key entry, Google AI Studio link, validation
+3. Create first session — lands on Create screen
 
-1. Welcome — logo + tagline
-2. API Key — Gemini, Google AI Studio link, validation call
-3. First project — folder picker or create new
-4. Chat screen — placeholder: "What do you want Iris to do?"
-5. Tooltip: "You can open the command menu with /"
+---
+
+## Notifications
+- "Iris finished — 3 files changed. Review needed."
+- Approve / Reject actions directly from notification
+- Agent working in background → foreground service
 
 ---
 
 ## MVP Scope
 
 ### v1.0 — In
-- Project list + create
-- Agent chat (Gemini only)
-- Tool use loop: read_file, write_file, bash, ask_user
-- Chat cards: BashCard, DiffCard, AskCard
-- Diff / Approve flow
-- Terminal tab (user only)
-- Slash menu
+- Projects screen
+- Session List screen
+- Chat screen + Terminal tab
+- Create screen
+- Agent core: Gemini 2.5 Flash, tool use loop
+- Tools: read_file, write_file, bash, ask_user, plan, update_todo
+- All chat cards: Bash, Diff, Ask, Todo, Code, ReadFile
+- Diff / Approve flow + deletion protection
+- .irisignore
+- Work Mode (PLAN/BUILD/AUTO)
+- Autonomy toggles
+- Input bar: slash menu, voice input, attach, effort, thinking, web search
 - Command palette (fuzzy file search)
 - @ mention + file preview
 - Compaction pipeline
-- Autonomy toggles (2)
-- /info token card
-- API key settings
-- Dark/light theme
-- Onboarding flow
+- Session export (markdown)
+- Session search (FTS5)
+- Haptic feedback
+- Keyboard shortcuts
+- Notifications + background agent
+- .iris/ project memory
+- Global + project rules
+- Settings screen
+- Dark theme
+- Onboarding (3 steps)
 
-### v1.1 — Multi-provider
-- Anthropic Claude
-- OpenAI GPT
-- Provider abstraction layer
+### v1.1
+- Anthropic + OpenAI providers
+- Light theme
+- Session search improvements
 
-### v1.2 — Git + MCP + IPC
-- /git slash command → Git bottom sheet
+### v1.2
+- Git UI (/git bottom sheet)
 - MCP HTTP/SSE client
-- Unix socket IPC
+- IPC terminal shortcuts
 
-### v2.0 — Power
+### v2.0
 - Ollama local model
 - SSH remote project
-- Parallel agent sessions
-- F-Droid repo
+- Theme Store
+- WearOS companion
 
 ---
 
@@ -220,44 +463,17 @@ Philosophy: If there is a terminal, no tool is needed. grep, ls, git → done vi
 
 | System | Reference |
 |--------|-----------|
-| PTY / Terminal | `termux/termux-app`, 'AndroidCSOfficial/android-code-studio (very important) |
-| Agent loop / Tool use | `anomalyco/opencode` — `packages/opencode/src/` |
+| PTY / Terminal | `termux/termux-app` |
+| Agent loop | `anomalyco/opencode` — `packages/opencode/src/` |
 | MCP client | `anomalyco/opencode` — MCP integration |
 | Diff | `java-diff-utils`, `git diff` |
 
 ---
 
-## Session Log
-
-### Session 1 — 2026-06-28: Project Setup (1.1)
-- GitHub repo created: https://github.com/mmuhofy/IrisCode (public, MIT)
-- `ci.yml` — Android CI workflow (build + lint + APK upload)
-- `changelog.yml` + `cliff.toml` — auto-generate CHANGELOG.md on release via git-cliff
-- `LICENSE` — MIT License
-- Initial commit pushed to `main`
-
-### Session 2 — 2026-06-28: Onboarding (1.2)
-- `OnboardingPreferences`: DataStore (state) + EncryptedSharedPreferences (API key)
-- `OnboardingViewModel`: 3-step state machine (Welcome → ApiKey → ProjectSetup → Complete)
-- `WelcomeScreen`: fade-in animations, app name + tagline, "Get Started" button
-- `ApiKeyScreen`: text input, Gemini models endpoint validation via OkHttp, skip option
-- `ProjectSetupScreen`: SAF `OpenDocumentTree` folder picker, path display
-- `MainActivity`: `@AndroidEntryPoint`, `AnimatedContent` transitions
-- Manifest: `INTERNET` permission, `MainActivity` as launcher activity
-- Updated `gradle/libs.versions.toml` with full dependency catalog (Compose, Hilt, Room, Navigation, etc.)
-- Root `build.gradle.kts`: added Hilt, KSP, Compose Compiler plugins
-- `app/build.gradle.kts`: Compose enabled, all dependencies wired
-- Created directory structure: `ui/`, `domain/`, `data/`, `agent/`, `terminal/`, `di/`, `util/`
-- `IrisCodeApp.kt` — `@HiltAndroidApp` Application class
-- `util/Constants.kt` — visual identity constants
-- `ui/theme/Color.kt`, `Type.kt`, `Theme.kt` — Material 3 Dark Purple/Violet theme
-- `di/AppModule.kt` — empty Hilt module scaffold
-- `AndroidManifest.xml` — added `android:name=".IrisCodeApp"`
-- `.gitignore` added
-- KSP version fixed to `2.1.0-1.0.29` (Kotlin 2.1.0 compatible)
-- Build blocked by missing Android SDK (Termux environment)
-
-### Open Decisions
-
-- GitHub repo URL: https://github.com/mmuhofy/IrisCode
-- Lottie animation: commission or self-design?
+## Open Decisions
+- App icon: "I" + cursor concept, final design TBD
+- Lottie animation: commission or self-design
+- GitHub repo URL: TBD
+- Notification Approve/Reject: write_file only or ask_user too (TBD)
+- Dosya silme güvenliği trash mekanizması: postponed
+- Projects screen layout: kararsız (session list ayrı ekran olarak netleşti)
