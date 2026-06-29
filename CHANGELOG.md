@@ -66,6 +66,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 - Update docs
 
 
@@ -157,6 +161,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Style
+
+
+
+- **ui:** Update UI to match memory-bank design decisions
 
 
 
