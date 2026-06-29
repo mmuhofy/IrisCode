@@ -4,6 +4,7 @@ import com.iris.iriscode.domain.model.ChatMessage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -113,14 +114,14 @@ class GeminiClient @Inject constructor() {
         model: String = GeminiApi.MODEL_FLASH,
         history: List<ChatMessage>,
         systemPrompt: String? = null
-    ): Flow<String> = callbackFlow {
+    ): Flow<String> = flow {
         val contents = chatMessagesToContents(history)
         val body = buildRequestBody(contents, emptyList(), systemPrompt)
         var previousText = ""
 
         streamRaw(apiKey, model, body).collect { dataString ->
             if (dataString.startsWith("\n\n[")) {
-                trySend(dataString)
+                emit(dataString)
                 return@collect
             }
             try {
@@ -133,10 +134,10 @@ class GeminiClient @Inject constructor() {
                 if (fullText.length > previousText.length) {
                     val delta = fullText.substring(previousText.length)
                     previousText = fullText
-                    trySend(delta)
+                    emit(delta)
                 }
             } catch (e: Exception) {
-                trySend("\n\n[Parse error: ${e.message}]")
+                emit("\n\n[Parse error: ${e.message}]")
             }
         }
     }
@@ -158,7 +159,7 @@ class GeminiClient @Inject constructor() {
         history: List<GeminiStep>,
         tools: List<GeminiTool> = emptyList(),
         systemPrompt: String? = null
-    ): Flow<GeminiSseEvent> = callbackFlow {
+    ): Flow<GeminiSseEvent> = flow {
 
         val contents = geminiStepsToContents(history)
         val body = buildRequestBody(contents, tools, systemPrompt)
@@ -167,7 +168,7 @@ class GeminiClient @Inject constructor() {
 
         streamRaw(apiKey, model, body).collect { dataString ->
             if (dataString.startsWith("\n\n[")) {
-                trySend(GeminiSseEvent.StreamError(dataString.trimStart('\n')))
+                emit(GeminiSseEvent.StreamError(dataString.trimStart('\n')))
                 return@collect
             }
             try {
@@ -186,7 +187,7 @@ class GeminiClient @Inject constructor() {
                         if (fullText.length > previousText.length) {
                             val delta = fullText.substring(previousText.length)
                             previousText = fullText
-                            trySend(GeminiSseEvent.TextDelta(delta))
+                            emit(GeminiSseEvent.TextDelta(delta))
                         }
                     }
 
@@ -203,15 +204,15 @@ class GeminiClient @Inject constructor() {
                             arguments = args
                         )
                         functionCalls.add(fcStep)
-                        trySend(GeminiSseEvent.FunctionCallStarted(fcStep.id, fcStep.name))
+                        emit(GeminiSseEvent.FunctionCallStarted(fcStep.id, fcStep.name))
                     }
                 }
             } catch (e: Exception) {
-                trySend(GeminiSseEvent.StreamError("Parse error: ${e.message}"))
+                emit(GeminiSseEvent.StreamError("Parse error: ${e.message}"))
             }
         }
 
-        trySend(GeminiSseEvent.InteractionCompleted(
+        emit(GeminiSseEvent.InteractionCompleted(
             toolCalls = functionCalls.toList(),
             inputTokens = 0,
             outputTokens = previousText.length
