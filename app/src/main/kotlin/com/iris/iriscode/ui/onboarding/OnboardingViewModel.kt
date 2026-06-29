@@ -61,7 +61,6 @@ class OnboardingViewModel @Inject constructor(
             preferences.onboardingCompleted.collect { completed ->
                 if (completed) {
                     _state.value = _state.value.copy(onboardingComplete = true)
-                    _events.emit(OnboardingEvent.Complete)
                 }
             }
         }
@@ -82,7 +81,7 @@ class OnboardingViewModel @Inject constructor(
                 validateApiKey(key)
             }
             OnboardingStep.CreateSession -> {
-                completeOnboarding()
+                // CreateSessionScreen handles project creation directly
             }
         }
     }
@@ -137,14 +136,6 @@ class OnboardingViewModel @Inject constructor(
                     apiKeyError = error.message
                 )
             }
-        }
-    }
-
-    private fun completeOnboarding() {
-        viewModelScope.launch {
-            preferences.setOnboardingCompleted()
-            _state.value = _state.value.copy(onboardingComplete = true)
-            _events.emit(OnboardingEvent.Complete)
         }
     }
 

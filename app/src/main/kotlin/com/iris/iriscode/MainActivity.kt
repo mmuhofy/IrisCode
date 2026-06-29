@@ -27,6 +27,7 @@ import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
 import com.iris.iriscode.ui.onboarding.CreateSessionScreen
+import com.iris.iriscode.ui.onboarding.WelcomeScreen
 import com.iris.iriscode.ui.onboarding.OnboardingEvent
 import com.iris.iriscode.ui.onboarding.OnboardingStep
 import com.iris.iriscode.ui.onboarding.OnboardingViewModel
@@ -65,9 +66,7 @@ class MainActivity : ComponentActivity() {
                             is OnboardingEvent.ProjectCreated -> {
                                 currentScreen = Screen.Chat(event.name, event.id, event.path)
                             }
-                            is OnboardingEvent.Complete -> {
-                                currentScreen = Screen.Projects
-                            }
+                            is OnboardingEvent.NextStep -> { }
                         }
                     }
                 }
