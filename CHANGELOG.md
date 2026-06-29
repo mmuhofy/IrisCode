@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 - (nothing yet)
 
+## [0.2.2] - 2026-06-29
+
+### Fixed
+- API key validation: move network call to Dispatchers.IO to prevent NetworkOnMainThreadException
+
 ## [0.2.1] - 2026-06-29
 
 ### Fixed

@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.iris.iriscode.data.remote.gemini.GeminiApi
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -96,32 +98,37 @@ class OnboardingViewModel @Inject constructor(
         _state.value = _state.value.copy(isValidating = true, apiKeyError = null)
 
         viewModelScope.launch {
-            try {
-                val request = Request.Builder()
-                    .url("${GeminiApi.BASE_URL}/models")
-                    .header("x-goog-api-key", key)
-                    .get()
-                    .build()
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val request = Request.Builder()
+                        .url("${GeminiApi.BASE_URL}/models")
+                        .header("x-goog-api-key", key)
+                        .get()
+                        .build()
 
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    preferences.saveApiKey(key)
-                    _state.value = _state.value.copy(
-                        isValidating = false,
-                        currentStep = OnboardingStep.ProjectSetup
-                    )
-                } else {
-                    val errorBody = response.body?.string() ?: "Unknown error"
-                    _state.value = _state.value.copy(
-                        isValidating = false,
-                        apiKeyError = "Invalid API key: $errorBody"
-                    )
+                    val response = client.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        preferences.saveApiKey(key)
+                        Result.success(Unit)
+                    } else {
+                        val errorBody = response.body?.string() ?: "Unknown error"
+                        Result.failure(Exception("Invalid API key: $errorBody"))
+                    }
+                } catch (e: Exception) {
+                    val msg = e.message ?: e::class.simpleName ?: "Unknown error"
+                    Result.failure(Exception("Connection error: $msg"))
                 }
-            } catch (e: Exception) {
-                val msg = e.message ?: e::class.simpleName ?: "Unknown error"
+            }
+
+            result.onSuccess {
                 _state.value = _state.value.copy(
                     isValidating = false,
-                    apiKeyError = "Connection error: $msg"
+                    currentStep = OnboardingStep.ProjectSetup
+                )
+            }.onFailure { error ->
+                _state.value = _state.value.copy(
+                    isValidating = false,
+                    apiKeyError = error.message
                 )
             }
         }
