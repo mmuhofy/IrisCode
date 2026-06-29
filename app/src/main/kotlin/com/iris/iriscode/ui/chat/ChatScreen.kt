@@ -76,11 +76,6 @@ fun ChatScreen(
             onMoreDismiss = viewModel::dismissMoreMenu
         )
 
-        PillTabs(
-            selectedTab = state.selectedTab,
-            onTabSelect = viewModel::setTab
-        )
-
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -88,6 +83,12 @@ fun ChatScreen(
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .background(IrisBackground)
         ) {
+            // Tab bar inside the rounded content area
+            PillTabs(
+                selectedTab = state.selectedTab,
+                onTabSelect = viewModel::setTab
+            )
+
             when (state.selectedTab) {
                 ChatTab.Terminal -> {
                     Box(
@@ -427,67 +428,47 @@ private fun PillTabs(
     selectedTab: ChatTab,
     onTabSelect: (ChatTab) -> Unit
 ) {
-    // Tab bar with its own background and top divider
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(IrisBackground)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Thin top divider
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(IrisOutline.copy(alpha = 0.3f))
-        )
+        ChatTab.entries.forEach { tab ->
+            val isSelected = tab == selectedTab
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            ChatTab.entries.forEach { tab ->
-                val isSelected = tab == selectedTab
-                val bgAlpha by animateFloatAsState(
-                    targetValue = if (isSelected) 1f else 0f,
-                    animationSpec = tween(200),
-                    label = "tabBg"
-                )
+            val tabIcon = when (tab) {
+                ChatTab.Chat -> Lucide.MessageSquare
+                ChatTab.Terminal -> Lucide.SquareTerminal
+                ChatTab.Files -> Lucide.Folder
+            }
 
-                val tabIcon = when (tab) {
-                    ChatTab.Chat -> Lucide.MessageSquare
-                    ChatTab.Terminal -> Lucide.SquareTerminal
-                    ChatTab.Files -> Lucide.Folder
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            if (isSelected) IrisPrimary.copy(alpha = 0.15f)
-                            else IrisSurfaceVariant
-                        )
-                        .clickable { onTabSelect(tab) }
-                        .padding(horizontal = 14.dp, vertical = 7.dp)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        if (isSelected) IrisPrimary.copy(alpha = 0.15f)
+                        else IrisSurfaceVariant
+                    )
+                    .clickable { onTabSelect(tab) }
+                    .padding(horizontal = 14.dp, vertical = 7.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = tabIcon,
-                            contentDescription = null,
-                            tint = if (isSelected) IrisPrimary else IrisTextSecondary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = tab.name,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (isSelected) IrisPrimary else IrisTextSecondary
-                        )
-                    }
+                    Icon(
+                        imageVector = tabIcon,
+                        contentDescription = null,
+                        tint = if (isSelected) IrisPrimary else IrisTextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = tab.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = if (isSelected) IrisPrimary else IrisTextSecondary
+                    )
                 }
             }
         }
