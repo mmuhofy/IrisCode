@@ -23,13 +23,16 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun MessageBubble(message: ChatMessage) {
+fun MessageBubble(
+    message: ChatMessage,
+    onAnswerAsk: (String) -> Unit = {}
+) {
     when (message) {
         is ChatMessage.UserText -> UserBubble(message)
         is ChatMessage.AgentText -> AgentBubble(message)
         is ChatMessage.BashCommand -> BashCard(message)
         is ChatMessage.FileDiff -> DiffCard(message)
-        is ChatMessage.AskUser -> AskCard(message)
+        is ChatMessage.AskUser -> AskCard(message, onAnswer = onAnswerAsk)
         is ChatMessage.ReadFile -> ReadFileCard(message)
     }
 }

@@ -20,15 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
+import com.iris.iriscode.ui.onboarding.CreateSessionScreen
+import com.iris.iriscode.ui.onboarding.OnboardingEvent
 import com.iris.iriscode.ui.onboarding.OnboardingStep
 import com.iris.iriscode.ui.onboarding.OnboardingViewModel
-import com.iris.iriscode.ui.onboarding.ProjectSetupScreen
-import com.iris.iriscode.ui.onboarding.WelcomeScreen
 import com.iris.iriscode.ui.projects.ProjectsScreen
 import com.iris.iriscode.ui.projects.ProjectsViewModel
 import com.iris.iriscode.ui.theme.IrisCodeTheme
@@ -50,11 +51,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val appDir = filesDir.resolve("projects").absolutePath
+
         setContent {
             IrisCodeTheme {
                 val onboardingVm: OnboardingViewModel = hiltViewModel()
                 val state by onboardingVm.state.collectAsState()
                 var currentScreen by remember { mutableStateOf<Screen>(Screen.Onboarding) }
+
+                LaunchedEffect(Unit) {
+                    onboardingVm.events.collect { event ->
+                        when (event) {
+                            is OnboardingEvent.ProjectCreated -> {
+                                currentScreen = Screen.Chat(event.name, event.id, event.path)
+                            }
+                            is OnboardingEvent.Complete -> {
+                                currentScreen = Screen.Projects
+                            }
+                        }
+                    }
+                }
 
                 if (state.onboardingComplete && currentScreen == Screen.Onboarding) {
                     currentScreen = Screen.Projects
@@ -83,11 +99,12 @@ class MainActivity : ComponentActivity() {
                                                 onSkip = onboardingVm::skipApiKey
                                             )
                                         }
-                                        OnboardingStep.ProjectSetup -> {
-                                            ProjectSetupScreen(
-                                                projectPath = state.projectPath,
-                                                onProjectPathSelected = onboardingVm::setProjectPath,
-                                                onNext = onboardingVm::nextStep
+                                        OnboardingStep.CreateSession -> {
+                                            CreateSessionScreen(
+                                                onCreate = { name, _ ->
+                                                    val path = "$appDir/$name"
+                                                    onboardingVm.createFirstProject(name, path)
+                                                }
                                             )
                                         }
                                     }
@@ -133,7 +150,7 @@ private fun OnboardingPageIndicator(
     currentStep: OnboardingStep,
     modifier: Modifier = Modifier
 ) {
-    val steps = listOf(OnboardingStep.Welcome, OnboardingStep.ApiKey, OnboardingStep.ProjectSetup)
+    val steps = listOf(OnboardingStep.Welcome, OnboardingStep.ApiKey, OnboardingStep.CreateSession)
     val currentIndex = steps.indexOf(currentStep)
 
     Row(

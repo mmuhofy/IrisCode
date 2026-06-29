@@ -3,6 +3,7 @@ package com.iris.iriscode.ui.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iris.iriscode.data.local.OnboardingPreferences
+import com.iris.iriscode.domain.repository.ProjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,7 @@ import javax.inject.Inject
 sealed class OnboardingStep {
     data object Welcome : OnboardingStep()
     data object ApiKey : OnboardingStep()
-    data object ProjectSetup : OnboardingStep()
+    data object CreateSession : OnboardingStep()
 }
 
 data class OnboardingState(
@@ -30,18 +31,18 @@ data class OnboardingState(
     val apiKey: String = "",
     val apiKeyError: String? = null,
     val isValidating: Boolean = false,
-    val projectPath: String? = null,
     val onboardingComplete: Boolean = false
 )
 
 sealed class OnboardingEvent {
     data object NextStep : OnboardingEvent()
-    data object Complete : OnboardingEvent()
+    data class ProjectCreated(val name: String, val id: Long, val path: String) : OnboardingEvent()
 }
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val preferences: OnboardingPreferences
+    private val preferences: OnboardingPreferences,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OnboardingState())
@@ -80,7 +81,7 @@ class OnboardingViewModel @Inject constructor(
                 }
                 validateApiKey(key)
             }
-            OnboardingStep.ProjectSetup -> {
+            OnboardingStep.CreateSession -> {
                 completeOnboarding()
             }
         }
@@ -90,8 +91,13 @@ class OnboardingViewModel @Inject constructor(
         _state.value = _state.value.copy(apiKey = key, apiKeyError = null)
     }
 
-    fun setProjectPath(path: String) {
-        _state.value = _state.value.copy(projectPath = path)
+    fun createFirstProject(name: String, path: String) {
+        viewModelScope.launch {
+            val id = projectRepository.createProject(name, path)
+            preferences.setOnboardingCompleted()
+            _state.value = _state.value.copy(onboardingComplete = true)
+            _events.emit(OnboardingEvent.ProjectCreated(name, id, path))
+        }
     }
 
     private fun validateApiKey(key: String) {
@@ -123,7 +129,7 @@ class OnboardingViewModel @Inject constructor(
             result.onSuccess {
                 _state.value = _state.value.copy(
                     isValidating = false,
-                    currentStep = OnboardingStep.ProjectSetup
+                    currentStep = OnboardingStep.CreateSession
                 )
             }.onFailure { error ->
                 _state.value = _state.value.copy(
@@ -146,7 +152,7 @@ class OnboardingViewModel @Inject constructor(
         _state.value = _state.value.copy(
             apiKey = "",
             apiKeyError = null,
-            currentStep = OnboardingStep.ProjectSetup
+            currentStep = OnboardingStep.CreateSession
         )
     }
 }

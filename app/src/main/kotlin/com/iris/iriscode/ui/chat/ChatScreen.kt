@@ -123,7 +123,10 @@ fun ChatScreen(
                         contentPadding = PaddingValues(top = 4.dp, bottom = 4.dp)
                     ) {
                         items(state.messages, key = { it.id }) { message ->
-                            MessageBubble(message = message)
+                            MessageBubble(
+                                message = message,
+                                onAnswerAsk = { answer -> viewModel.answerAsk(message.id, answer) }
+                            )
                         }
                         if (state.isTyping) {
                             item(key = "typing") { TypingIndicator() }
