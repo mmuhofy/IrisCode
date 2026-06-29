@@ -51,12 +51,13 @@ fun ProjectsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(IrisBackground)
+            .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 4.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -178,7 +179,8 @@ fun ProjectsScreen(
             onClick = onCreateProject,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(20.dp),
+                .padding(20.dp)
+                .navigationBarsPadding(),
             containerColor = IrisPrimary,
             shape = RoundedCornerShape(16.dp)
         ) {

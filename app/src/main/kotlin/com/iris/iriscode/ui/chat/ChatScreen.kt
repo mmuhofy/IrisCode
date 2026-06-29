@@ -179,8 +179,7 @@ private fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(IrisSurface)
-            .padding(start = 4.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBack) {

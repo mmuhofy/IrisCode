@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
                 when (val screen = currentScreen) {
                     is Screen.Onboarding -> {
-                        Column(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.fillMaxWidth().statusBarsPadding().navigationBarsPadding()) {
                             Box(modifier = Modifier.weight(1f)) {
                                 AnimatedContent(
                                     targetState = state.currentStep,
