@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 - (nothing yet)
 
+## [0.2.1] - 2026-06-29
+
+### Fixed
+- API key validation: use `x-goog-api-key` header (matching GeminiClient), add timeouts, better null-safe error message
+- CI build: replace `Lucide.Sparkles` with `Lucide.BrainCircuit` (icon not in lucide-cmp 2.2.1)
+
 ## [0.2.0] - 2026-06-29
 
 ### Features

@@ -11,8 +11,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.iris.iriscode.data.remote.gemini.GeminiApi
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 sealed class OnboardingStep {
@@ -46,7 +48,10 @@ class OnboardingViewModel @Inject constructor(
     private val _events = MutableSharedFlow<OnboardingEvent>()
     val events: SharedFlow<OnboardingEvent> = _events.asSharedFlow()
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .build()
 
     init {
         viewModelScope.launch {
@@ -93,7 +98,8 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val request = Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models?key=$key")
+                    .url("${GeminiApi.BASE_URL}/models")
+                    .header("x-goog-api-key", key)
                     .get()
                     .build()
 
@@ -112,9 +118,10 @@ class OnboardingViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                val msg = e.message ?: e::class.simpleName ?: "Unknown error"
                 _state.value = _state.value.copy(
                     isValidating = false,
-                    apiKeyError = "Connection error: ${e.message}"
+                    apiKeyError = "Connection error: $msg"
                 )
             }
         }
