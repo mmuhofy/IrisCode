@@ -40,7 +40,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
 
     LaunchedEffect(projectPath) {
-        viewModel.setProjectPath(projectPath)
+        viewModel.setProjectInfo(projectPath, projectName)
     }
 
     LaunchedEffect(state.messages.size) {

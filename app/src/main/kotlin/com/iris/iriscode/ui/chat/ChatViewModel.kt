@@ -3,6 +3,7 @@ package com.iris.iriscode.ui.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iris.iriscode.agent.AgentLoop
+import com.iris.iriscode.agent.AgentSystemPrompt
 import com.iris.iriscode.data.local.OnboardingPreferences
 import com.iris.iriscode.data.remote.gemini.GeminiApi
 import com.iris.iriscode.data.remote.gemini.GeminiClient
@@ -49,7 +50,8 @@ data class ChatUiState(
     val webSearchEnabled: Boolean = false,
     val effortLevel: String = "med",
     val modelDropdownExpanded: Boolean = false,
-    val projectPath: String? = null
+    val projectPath: String? = null,
+    val projectName: String? = null
 )
 
 @HiltViewModel
@@ -66,8 +68,8 @@ class ChatViewModel @Inject constructor(
 
     // ─── Public API ──────────────────────────────────────────────────────────
 
-    fun setProjectPath(path: String) {
-        _state.value = _state.value.copy(projectPath = path)
+    fun setProjectInfo(path: String, name: String) {
+        _state.value = _state.value.copy(projectPath = path, projectName = name)
     }
 
     fun updateInput(text: String) {
@@ -341,9 +343,13 @@ class ChatViewModel @Inject constructor(
     }
 
     private fun buildSystemPrompt(): String {
-        return "You are Iris, a helpful coding assistant with access to tools. " +
-               "When the user asks you to read, write, or analyze code, use your tools. " +
-               "Read files before editing them. Show clear reasoning."
+        val path = _state.value.projectPath
+        val name = _state.value.projectName
+        val modelId = resolveModelName()
+        if (path != null && name != null) {
+            return AgentSystemPrompt.build(path, name, modelId)
+        }
+        return "You are Iris, a helpful coding assistant. Read files before editing them. Show clear reasoning."
     }
 
     // ─── UI actions ─────────────────────────────────────────────────────────

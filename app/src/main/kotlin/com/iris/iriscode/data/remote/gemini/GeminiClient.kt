@@ -167,10 +167,12 @@ class GeminiClient @Inject constructor() {
         val body = buildRequestBody(contents, tools, systemPrompt)
         var previousText = ""
         val functionCalls = mutableListOf<GeminiStep.FunctionCall>()
+        var aborted = false
 
         streamRaw(apiKey, model, body).collect { dataString ->
             if (dataString.startsWith("\n\n[")) {
                 emit(GeminiSseEvent.StreamError(dataString.trimStart('\n')))
+                aborted = true
                 return@collect
             }
             try {
@@ -211,14 +213,17 @@ class GeminiClient @Inject constructor() {
                 }
             } catch (e: Exception) {
                 emit(GeminiSseEvent.StreamError("Parse error: ${e.message}"))
+                aborted = true
             }
         }
 
-        emit(GeminiSseEvent.InteractionCompleted(
-            toolCalls = functionCalls.toList(),
-            inputTokens = 0,
-            outputTokens = previousText.length
-        ))
+        if (!aborted) {
+            emit(GeminiSseEvent.InteractionCompleted(
+                toolCalls = functionCalls.toList(),
+                inputTokens = 0,
+                outputTokens = previousText.length
+            ))
+        }
     }
 
     // ─── Content builders ──────────────────────────────────────────────────
