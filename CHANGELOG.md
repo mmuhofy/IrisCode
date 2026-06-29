@@ -78,6 +78,10 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update CHANGELOG.md
+
+
+
 - Update docs
 
 
@@ -169,6 +173,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Style
+
+
+
+- **ui:** Redesign chat screen - Claude-style input bar, pill tabs, model context menu
 
 
 
