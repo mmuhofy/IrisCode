@@ -1,218 +1,38 @@
 # Changelog
 
-All notable changes to Iris Code are documented here.
+All notable changes to this project will be documented in this file.
 
-
-
-### Bug Fixes
-
-
-
-- **ui:** Uniform IrisBackground, statusbar padding for all screens, remove TopBar bg override
-
-
-
-- **ui:** Status bar transparency, input bar border, + sheet -> ModalBottomSheet
-
-
-
-- Resolve build errors - sealed class syntax, KeyboardActions type, lucide import
-
-
-
-- **dependecy:** Add missing dependecy to app/build.gradle.kts
-
-
-
-- **ui:** Correct Lucide icon name in AskCard
-
-
-
-- **build:** Switch lucide dependency from android to cmp variant for ImageVector API
-
-
-
-- Resolve CI build errors — missing imports and AnimatedVisibility usage
-
-
-
-- **ui:** Add missing background import in AskCard
-
-
-
-- **build:** Proper Java imports for keystore properties in Gradle KTS
-
-
-
-- **ui:** LottieCompositionSpec is in compose package, not lottie
-
-
-
-- **ui:** Correct Lottie imports for v6.4.0
-
-
-
-
-### Chores
-
-
-
-- **project:** Add keystore and versioning
-
-
-
-- **project:** Remove lint from CI workflow
-
-
-
-- **project:** Add CI, changelog workflow, LICENSE
-
-
-
-- **project:** Initial project setup
-
-
-
-
-### Documentation
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update docs
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
-- Update CHANGELOG.md
-
-
-
+## [Unreleased]
 
 ### Features
+- **agent**: implement AgentLoop — streaming tool call loop with approval suspension
+- **agent**: add ToolRegistry + 4 tool implementations (read_file, write_file, bash, ask_user)
+- **data**: add GeminiClient with Interactions API SSE streaming + function calling
+- **domain**: add IrisTool interface, ToolResult, AgentEvent sealed classes
+- **ui**: chat UI with cards, slash menu, toolbar
+- **data**: project management — Room, repository, UI
+- **ui**: terminal icon support with powerline-style rendering
 
+### Style & UI
+- Redesign chat screen: Claude-style input bar, pill tabs, model context menu
+- Update theme to near-black (#0C0C0C) + gold (#E8C547) palette
+- Polish across all screens — onboarding, projects, chat
+- Migrate icon set from Material Outlined to Lucide via composables/icons-lucide
+- Uniform IrisBackground throughout — remove TopBar bg override
+- Input bar double-border fix: OutlinedTextField borders transparent
+- Replace AnimatedVisibility ExpandedPanel with ModalBottomSheet
+- Status bar: remove IrisBackground override, use enableEdgeToEdge transparent
+- Add statusBarsPadding/navigationBarsPadding for proper edge-to-edge
 
+### Fixes
+- Sealed class syntax (`data object` → `object`)
+- KeyboardActions type annotation
+- Missing imports: AnimatedVisibility, background, KeyboardActions
+- Java imports for keystore properties in Gradle KTS
+- LottieCompositionSpec import path
+- Lucide dependency switch from android to cmp variant for ImageVector API
+- Dependencies: add missing deps to app/build.gradle.kts
 
-- **agent:** Implement AgentLoop ??? streaming tool call loop with approval suspension
-
-
-
-- **agent:** Add ToolRegistry + 4 tool implementations
-
-
-
-- **data:** Add GeminiClient with Interactions API SSE streaming + function calling
-
-
-
-- **domain:** Add IrisTool interface, ToolResult, AgentEvent sealed classes
-
-
-
-- **ui:** Migrate icon set from Material Outlined to Lucide via composables/icons-lucide-android
-
-
-
-- **ui:** Chat UI with cards, slash menu, toolbar
-
-
-
-- **data:** Project management — Room, repository, UI
-
-
-
-- **ui:** Add Lottie eye animation to WelcomeScreen
-
-
-
-- **ui:** Onboarding flow — Welcome, API key, project setup
-
-
-
-
-### Style
-
-
-
-- **ui:** Redesign chat screen - Claude-style input bar, pill tabs, model context menu
-
-
-
-- **ui:** Update UI to match memory-bank design decisions
-
-
-
-- **ui:** Update theme to near-black + gold palette
-
-
-
-- **ui:** Comprehensive UI polish across all screens
-
-
-
-
-### Uncategorized
-
-
-
-- Trigger changelog on push, use auto-commit action
-
-
+### Chores
+- Add keystore and versioning configuration
+- Remove auto changelog action and cliff config (manual changelog)
