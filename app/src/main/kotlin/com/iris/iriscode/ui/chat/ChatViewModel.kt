@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+enum class ChatTab { Chat, Terminal }
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
@@ -22,7 +24,12 @@ data class ChatUiState(
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
     val slashQuery: String = "",
-    val showModelSheet: Boolean = false
+    val showModelSheet: Boolean = false,
+    val selectedTab: ChatTab = ChatTab.Chat,
+    val showExpandedPanel: Boolean = false,
+    val thinkingEnabled: Boolean = true,
+    val webSearchEnabled: Boolean = false,
+    val effortLevel: String = "med"
 )
 
 @HiltViewModel
@@ -86,6 +93,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             "auto" -> setWorkMode(WorkMode.AUTO)
             "models" -> showModelSheet()
             "new" -> clearChat()
+            "settings" -> { /* navigate to settings - handled by parent */ }
             else -> {
                 val message = ChatMessage.UserText(
                     id = UUID.randomUUID().toString(),
@@ -115,6 +123,26 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             currentModel = model,
             showModelSheet = false
         )
+    }
+
+    fun setTab(tab: ChatTab) {
+        _state.value = _state.value.copy(selectedTab = tab)
+    }
+
+    fun toggleExpandedPanel() {
+        _state.value = _state.value.copy(showExpandedPanel = !_state.value.showExpandedPanel)
+    }
+
+    fun setThinking(enabled: Boolean) {
+        _state.value = _state.value.copy(thinkingEnabled = enabled)
+    }
+
+    fun setWebSearch(enabled: Boolean) {
+        _state.value = _state.value.copy(webSearchEnabled = enabled)
+    }
+
+    fun setEffortLevel(level: String) {
+        _state.value = _state.value.copy(effortLevel = level)
     }
 
     fun approveDiff(messageId: String) {

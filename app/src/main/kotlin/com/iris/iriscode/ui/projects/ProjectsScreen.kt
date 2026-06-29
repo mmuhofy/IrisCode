@@ -1,12 +1,13 @@
-// UNTESTED — verify before use
 package com.iris.iriscode.ui.projects
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,11 +21,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.Project
 import com.iris.iriscode.ui.theme.*
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProjectsScreen(
     viewModel: ProjectsViewModel,
@@ -33,6 +36,7 @@ fun ProjectsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val projects by viewModel.projects.collectAsState()
+    var contextMenuProject by remember { mutableStateOf<Project?>(null) }
 
     val folderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -49,7 +53,6 @@ fun ProjectsScreen(
             .background(IrisBackground)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +99,7 @@ fun ProjectsScreen(
                             Icon(
                                 imageVector = Lucide.FolderOpen,
                                 contentDescription = null,
-                                tint = IrisTextSubtle,
+                                tint = IrisTextSecondary,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -104,13 +107,13 @@ fun ProjectsScreen(
                         Text(
                             text = "No projects yet",
                             style = MaterialTheme.typography.titleMedium,
-                            color = IrisTextSubtle
+                            color = IrisTextSecondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Tap + to create your first project",
                             style = MaterialTheme.typography.bodySmall,
-                            color = IrisTextSubtle.copy(alpha = 0.6f),
+                            color = IrisTextSecondary.copy(alpha = 0.6f),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -162,7 +165,8 @@ fun ProjectsScreen(
                         ) {
                             ProjectCard(
                                 project = project,
-                                onClick = { onProjectClick(project) }
+                                onClick = { onProjectClick(project) },
+                                onLongClick = { contextMenuProject = project }
                             )
                         }
                     }
@@ -182,6 +186,35 @@ fun ProjectsScreen(
                 imageVector = Lucide.Plus,
                 contentDescription = "Create Project",
                 modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+
+    contextMenuProject?.let { project ->
+        DropdownMenu(
+            expanded = true,
+            onDismissRequest = { contextMenuProject = null },
+            offset = DpOffset(16.dp, 0.dp),
+            modifier = Modifier
+                .background(IrisSurface)
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            DropdownMenuItem(
+                text = { Text("Rename", color = IrisText) },
+                onClick = { contextMenuProject = null },
+                leadingIcon = {
+                    Icon(Lucide.Pencil, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(16.dp))
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete", color = IrisError) },
+                onClick = {
+                    contextMenuProject = null
+                    viewModel.requestDelete(project)
+                },
+                leadingIcon = {
+                    Icon(Lucide.Trash2, contentDescription = null, tint = IrisError, modifier = Modifier.size(16.dp))
+                }
             )
         }
     }
@@ -228,17 +261,33 @@ fun ProjectsScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ProjectCard(project: Project, onClick: () -> Unit) {
+private fun ProjectCard(
+    project: Project,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .clip(RoundedCornerShape(14.dp))
             .background(IrisSurfaceContainer)
-            .padding(14.dp),
+            .padding(start = 0.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(44.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(IrisPrimary)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -269,7 +318,7 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
             Text(
                 text = project.path,
                 style = MaterialTheme.typography.bodySmall,
-                color = IrisTextSubtle,
+                color = IrisTextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -278,7 +327,7 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
         Icon(
             imageVector = Lucide.ChevronRight,
             contentDescription = null,
-            tint = IrisTextSubtle.copy(alpha = 0.4f),
+            tint = IrisTextSecondary.copy(alpha = 0.4f),
             modifier = Modifier.size(18.dp)
         )
     }
