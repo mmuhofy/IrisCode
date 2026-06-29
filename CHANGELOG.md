@@ -66,6 +66,14 @@ All notable changes to Iris Code are documented here.
 
 
 
+- Update docs
+
+
+
+- Update CHANGELOG.md
+
+
+
 - Update CHANGELOG.md
 
 
@@ -149,6 +157,10 @@ All notable changes to Iris Code are documented here.
 
 
 ### Style
+
+
+
+- **ui:** Update theme to near-black + gold palette
 
 
 
