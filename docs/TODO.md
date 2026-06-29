@@ -38,7 +38,7 @@ _Last updated: 2026-06-28_
 - [ ] `IrisTool` sealed interface
 - [ ] `ToolResult` sealed class: `Success`, `Error`, `Cancelled`, `AwaitingApproval`
 - [ ] `ToolRegistry` — registration and dispatching
-- [ ] Gemini GenAI SDK — streaming + function calling
+- [ ] Gemini Rest API — streaming + function calling
 - [ ] Agent loop: send → receive → tool call → result → repeat
 - [ ] `read_file` tool
 - [ ] `write_file` tool (triggers DiffApproveEvent)
