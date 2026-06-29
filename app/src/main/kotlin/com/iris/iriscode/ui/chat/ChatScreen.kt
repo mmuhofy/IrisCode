@@ -310,7 +310,7 @@ private fun TopBar(
         Box(modifier = Modifier.align(Alignment.CenterEnd)) {
             IconButton(onClick = onMoreClick) {
                 Icon(
-                    imageVector = Lucide.MoreVertical,
+                    imageVector = Lucide.Menu,
                     contentDescription = "More options",
                     tint = IrisText,
                     modifier = Modifier.size(20.dp)
@@ -323,22 +323,43 @@ private fun TopBar(
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.background(IrisSurface)
             ) {
-                DropdownMenuItem(
-                    onClick = { onMoreDismiss() },
-                    text = { Text("Settings", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
-                    icon = { Icon(Lucide.Settings, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
-                )
-                DropdownMenuItem(
-                    onClick = { onMoreDismiss() },
-                    text = { Text("New Session", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
-                    icon = { Icon(Lucide.Plus, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
-                )
-                HorizontalDivider(color = IrisOutline.copy(alpha = 0.3f))
-                DropdownMenuItem(
-                    onClick = { onMoreDismiss() },
-                    text = { Text("Export Session", style = MaterialTheme.typography.bodyMedium, color = IrisText) },
-                    icon = { Icon(Lucide.Download, contentDescription = null, tint = IrisTextSecondary, modifier = Modifier.size(18.dp)) }
-                )
+                listOf(
+                    "Settings" to Lucide.Settings,
+                    "New Session" to Lucide.Plus,
+                    "Export Session" to Lucide.Download
+                ).forEachIndexed { index, (label, icon) ->
+                    if (index == 2) {
+                        HorizontalDivider(color = IrisOutline.copy(alpha = 0.3f))
+                    }
+                    Surface(
+                        onClick = { onMoreDismiss() },
+                        shape = RoundedCornerShape(10.dp),
+                        color = IrisSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = IrisTextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = IrisText
+                            )
+                        }
+                    }
+                }
             }
         }
     }
