@@ -10,15 +10,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CreateNewFolder
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -30,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.ui.theme.IrisOutline
 import com.iris.iriscode.ui.theme.IrisPrimary
-import com.iris.iriscode.ui.theme.IrisSuccess
 import com.iris.iriscode.ui.theme.IrisTextSubtle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +36,6 @@ fun CreateProjectSheet(
     path: String?,
     onNameChange: (String) -> Unit,
     onPathChange: (String) -> Unit,
-    onFolderPick: () -> Unit,
     onCreate: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -89,32 +84,19 @@ fun CreateProjectSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedButton(
-                onClick = onFolderPick,
+            OutlinedTextField(
+                value = path ?: "",
+                onValueChange = onPathChange,
+                label = { Text("Project Path") },
+                placeholder = { Text("/storage/emulated/0/MyApp") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors()
-            ) {
-                Icon(
-                    imageVector = if (path != null) Icons.Outlined.FolderOpen else Icons.Outlined.Folder,
-                    contentDescription = null,
-                    tint = if (path != null) IrisSuccess else IrisPrimary
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = IrisPrimary,
+                    unfocusedBorderColor = IrisOutline,
+                    cursorColor = IrisPrimary
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (path != null) "Change Folder" else "Choose Folder",
-                    fontWeight = FontWeight.Medium,
-                    color = if (path != null) IrisSuccess else IrisTextSubtle
-                )
-            }
-
-            if (path != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = path,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = IrisTextSubtle
-                )
-            }
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -123,7 +105,7 @@ fun CreateProjectSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = name.isNotBlank() && path != null,
+                enabled = name.isNotBlank() && !path.isNullOrBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = IrisPrimary)
             ) {
                 Icon(

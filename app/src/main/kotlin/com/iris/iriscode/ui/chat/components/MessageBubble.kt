@@ -25,13 +25,15 @@ import java.util.Locale
 @Composable
 fun MessageBubble(
     message: ChatMessage,
-    onAnswerAsk: (String) -> Unit = {}
+    onAnswerAsk: (String) -> Unit = {},
+    onApproveDiff: () -> Unit = {},
+    onRejectDiff: () -> Unit = {}
 ) {
     when (message) {
         is ChatMessage.UserText -> UserBubble(message)
         is ChatMessage.AgentText -> AgentBubble(message)
         is ChatMessage.BashCommand -> BashCard(message)
-        is ChatMessage.FileDiff -> DiffCard(message)
+        is ChatMessage.FileDiff -> DiffCard(message, onApprove = onApproveDiff, onReject = onRejectDiff)
         is ChatMessage.AskUser -> AskCard(message, onAnswer = onAnswerAsk)
         is ChatMessage.ReadFile -> ReadFileCard(message)
     }

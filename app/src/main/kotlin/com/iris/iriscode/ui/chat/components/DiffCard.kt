@@ -20,7 +20,11 @@ import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.ui.theme.*
 
 @Composable
-fun DiffCard(message: ChatMessage.FileDiff) {
+fun DiffCard(
+    message: ChatMessage.FileDiff,
+    onApprove: () -> Unit = {},
+    onReject: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,7 +79,7 @@ fun DiffCard(message: ChatMessage.FileDiff) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = { /* handled by parent */ },
+                    onClick = onApprove,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = IrisSuccess)
@@ -89,7 +93,7 @@ fun DiffCard(message: ChatMessage.FileDiff) {
                     Text("Approve", fontWeight = FontWeight.SemiBold)
                 }
                 OutlinedButton(
-                    onClick = { /* handled by parent */ },
+                    onClick = onReject,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = IrisError)

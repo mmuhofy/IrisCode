@@ -1,8 +1,5 @@
 package com.iris.iriscode.ui.projects
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -37,15 +34,6 @@ fun ProjectsScreen(
     val state by viewModel.state.collectAsState()
     val projects by viewModel.projects.collectAsState()
     var contextMenuProject by remember { mutableStateOf<Project?>(null) }
-
-    val folderPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri: Uri? ->
-        uri?.let {
-            val path = uri.path?.split(":")?.lastOrNull() ?: return@let
-            viewModel.updateNewProjectPath("/storage/emulated/0/$path")
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -227,7 +215,6 @@ fun ProjectsScreen(
             path = state.newProjectPath,
             onNameChange = viewModel::updateNewProjectName,
             onPathChange = viewModel::updateNewProjectPath,
-            onFolderPick = { folderPicker.launch(null) },
             onCreate = viewModel::createProject,
             onDismiss = viewModel::hideCreateSheet
         )

@@ -125,7 +125,9 @@ fun ChatScreen(
                         items(state.messages, key = { it.id }) { message ->
                             MessageBubble(
                                 message = message,
-                                onAnswerAsk = { answer -> viewModel.answerAsk(message.id, answer) }
+                                onAnswerAsk = { answer -> viewModel.answerAsk(message.id, answer) },
+                                onApproveDiff = { viewModel.approveDiff(message.id) },
+                                onRejectDiff = { viewModel.rejectDiff(message.id) }
                             )
                         }
                         if (state.isTyping) {
