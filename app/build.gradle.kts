@@ -99,6 +99,9 @@ dependencies {
     // Security
     implementation(libs.security.crypto)
 
+    // Firebase AI Logic (Gemini function calling)
+    implementation(libs.firebase.ai)
+    
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
