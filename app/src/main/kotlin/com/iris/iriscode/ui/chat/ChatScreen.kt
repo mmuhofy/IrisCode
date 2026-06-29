@@ -295,7 +295,7 @@ private fun InputBar(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = onSend),
+            keyboardActions = KeyboardActions(onSend = { onSend() }),
             shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = IrisPrimary,

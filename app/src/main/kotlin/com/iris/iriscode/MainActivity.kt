@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
@@ -41,10 +41,10 @@ import androidx.compose.material3.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 private sealed class Screen {
-    data object Onboarding : Screen()
-    data object Projects : Screen()
+    object Onboarding : Screen()
+    object Projects : Screen()
     data class Chat(val projectName: String, val projectId: Long) : Screen()
-    data object Settings : Screen()
+    object Settings : Screen()
 }
 
 @AndroidEntryPoint
