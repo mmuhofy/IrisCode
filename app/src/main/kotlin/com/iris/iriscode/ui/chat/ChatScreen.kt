@@ -98,7 +98,7 @@ fun ChatScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                imageVector = Lucide.Sparkles,
+                                imageVector = Lucide.BrainCircuit,
                                 contentDescription = null,
                                 tint = IrisPrimary.copy(alpha = 0.3f),
                                 modifier = Modifier.size(36.dp)
@@ -577,7 +577,7 @@ private fun TypingIndicator() {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Lucide.Sparkles,
+                imageVector = Lucide.BrainCircuit,
                 contentDescription = null,
                 tint = IrisPrimary.copy(alpha = 0.6f),
                 modifier = Modifier.size(14.dp)

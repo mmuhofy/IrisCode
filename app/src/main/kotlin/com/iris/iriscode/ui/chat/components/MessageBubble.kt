@@ -3,7 +3,7 @@ package com.iris.iriscode.ui.chat.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -82,7 +82,7 @@ private fun AgentBubble(message: ChatMessage.AgentText) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Lucide.Sparkles,
+                imageVector = Lucide.BrainCircuit,
                 contentDescription = "Iris",
                 tint = IrisPrimary,
                 modifier = Modifier.size(16.dp)
