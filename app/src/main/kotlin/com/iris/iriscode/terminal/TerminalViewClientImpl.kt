@@ -6,9 +6,13 @@ import android.view.MotionEvent
 import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalViewClient
 
-class TerminalViewClientImpl : TerminalViewClient {
+class TerminalViewClientImpl(
+    private val onScaleChange: ((Float) -> Float)? = null
+) : TerminalViewClient {
 
-    override fun onScale(scale: Float): Float = 1.0f
+    override fun onScale(scale: Float): Float {
+        return onScaleChange?.invoke(scale) ?: 1.0f
+    }
 
     override fun onSingleTapUp(e: MotionEvent) {
     }

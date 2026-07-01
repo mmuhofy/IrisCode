@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import com.iris.iriscode.terminal.BootstrapState
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
 import com.termux.view.TerminalView
+import kotlin.math.roundToInt
 
 @Composable
 fun TerminalScreen(
@@ -32,7 +34,18 @@ fun TerminalScreen(
     bootstrapState: BootstrapState,
     onRetry: () -> Unit = {}
 ) {
-    val viewClient = TerminalViewClientImpl()
+    val fontSize = remember { mutableIntStateOf(12) }
+
+    val viewClient = remember {
+        TerminalViewClientImpl { scale ->
+            val base = fontSize.intValue
+            val newSize = (base * scale).roundToInt().coerceIn(6, 30)
+            if (newSize != base) {
+                fontSize.intValue = newSize
+            }
+            newSize.toFloat() / base
+        }
+    }
 
     when (bootstrapState) {
         is BootstrapState.Checking, is BootstrapState.Downloading, is BootstrapState.Extracting -> {
@@ -70,7 +83,7 @@ fun TerminalScreen(
                 modifier = modifier.focusRequester(focusRequester),
                 factory = { ctx ->
                     TerminalView(ctx, null).apply {
-                        setTextSize(12)
+                        setTextSize(fontSize.intValue)
                         setTerminalViewClient(viewClient)
                         isFocusable = true
                         isFocusableInTouchMode = true
