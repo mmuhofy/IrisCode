@@ -24,10 +24,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.foundation.layout.windowInsetsPadding
-import com.google.accompanist.insets.ime
-import com.google.accompanist.insets.navigationBars
-import com.google.accompanist.insets.statusBars
+import androidx.compose.ui.window.ime
+import androidx.compose.ui.window.navigationBars
+import androidx.compose.ui.window.statusBars
+import androidx.compose.ui.window.windowInsetsPadding
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
 import com.iris.iriscode.terminal.UbuntuSetupState
@@ -115,8 +115,6 @@ fun TerminalScreen(
                         setTerminalViewClient(viewClient)
                         isFocusable = true
                         isFocusableInTouchMode = true
-                        // Enable text selection (long press to select)
-                        setSelectTextOnLongPress(true)
                         terminalManager.currentSession?.let { session ->
                             attachSession(session)
                         }

@@ -465,9 +465,9 @@ class UbuntuBootstrap(private val context: Context) {
             try {
                 // Run apt update && apt install -y apt inside PRoot
                 val prootCmd = listOf(
-                    prootPath,
+                    prootFile.absolutePath,
                     "--link2symlink",
-                    "-r", rootfsPath,
+                    "-r", rootfsDir.absolutePath,
                     "-b", "/system:/system",
                     "-b", "/vendor:/vendor",
                     "-b", "/apex:/apex",
