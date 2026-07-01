@@ -229,7 +229,7 @@ class UbuntuBootstrap(private val context: Context) {
                 }
 
                 // Align to even boundary
-                if (size % 2 != 0) fis.skip(1)
+                if (size % 2L != 0) fis.skip(1)
             }
         }
     }
