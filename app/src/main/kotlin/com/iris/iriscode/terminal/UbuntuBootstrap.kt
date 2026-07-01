@@ -64,6 +64,9 @@ class UbuntuBootstrap(private val context: Context) {
 
         try {
             withContext(Dispatchers.IO) {
+                // Clean up any leftover Termux directories from previous installs
+                File(context.filesDir, "termux").deleteRecursively()
+                
                 baseDir.mkdirs()
                 homeDir.mkdirs()
                 tmpDir.mkdirs()
