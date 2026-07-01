@@ -65,6 +65,17 @@ class TermuxBootstrap(private val context: Context) {
         runInstall(onState)
     }
 
+    private fun findPattern(bytes: ByteArray, pattern: ByteArray, start: Int): Int {
+        if (start + pattern.size > bytes.size) return -1
+        outer@ for (i in start..bytes.size - pattern.size) {
+            for (j in pattern.indices) {
+                if (bytes[i + j] != pattern[j]) continue@outer
+            }
+            return i
+        }
+        return -1
+    }
+
     private fun fixTermuxPrefix() {
         val termuxBytes = TERMUX_PREFIX.encodeToByteArray()
         val ourBytes = PREFIX_ALT.encodeToByteArray()
@@ -76,7 +87,7 @@ class TermuxBootstrap(private val context: Context) {
                 var modified = false
                 var start = 0
                 while (true) {
-                    val idx = bytes.indexOf(termuxBytes, start)
+                    val idx = findPattern(bytes, termuxBytes, start)
                     if (idx < 0) break
                     ourBytes.copyInto(bytes, destinationOffset = idx)
                     start = idx + ourBytes.size
