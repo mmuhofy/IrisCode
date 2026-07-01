@@ -12,3 +12,4 @@ local.properties
 .indexer.conf
 keystore.properties
 index.txt
+data.tar.xz
