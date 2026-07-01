@@ -30,7 +30,7 @@ class TermuxBootstrap(private val context: Context) {
         get() = File(context.filesDir, "termux/home")
 
     val isInstalled: Boolean
-        get() = File(prefixDir, "bin/bash").exists()
+        get() = File(prefixDir, "bin/bash").canExecute()
 
     val shellPath: String
         get() = File(prefixDir, "bin/bash").absolutePath
@@ -48,103 +48,119 @@ class TermuxBootstrap(private val context: Context) {
     private val client = OkHttpClient()
 
     suspend fun install(onState: (BootstrapState) -> Unit) {
+        onState(BootstrapState.Checking)
+        runInstall(onState)
+    }
+
+    fun retry() {
+        File(context.filesDir, "termux/staging").deleteRecursively()
+        prefixDir.deleteRecursively()
+    }
+
+    private suspend fun runInstall(onState: (BootstrapState) -> Unit) {
         if (isInstalled) {
             onState(BootstrapState.AlreadyInstalled)
             return
         }
 
-        onState(BootstrapState.Checking)
-
         try {
             withContext(Dispatchers.IO) {
-            val arch = archMap[Build.SUPPORTED_ABIS[0]]
-                ?: throw RuntimeException("Unsupported architecture: ${Build.SUPPORTED_ABIS[0]}")
+                val arch = archMap[Build.SUPPORTED_ABIS[0]]
+                    ?: throw RuntimeException("Unsupported architecture: ${Build.SUPPORTED_ABIS[0]}")
 
-            val releaseUrl = "https://api.github.com/repos/termux/termux-packages/releases?per_page=1"
-            val releaseRequest = Request.Builder()
-                .url(releaseUrl)
-                .addHeader("Accept", "application/json")
-                .addHeader("User-Agent", "IrisCode/1.0")
-                .build()
-            val releaseResponse = client.newCall(releaseRequest).execute()
-            if (!releaseResponse.isSuccessful) throw RuntimeException("Failed to fetch latest release")
-            val releaseBody = releaseResponse.body!!.string()
+                val releaseUrl = "https://api.github.com/repos/termux/termux-packages/releases?per_page=1"
+                val releaseRequest = Request.Builder()
+                    .url(releaseUrl)
+                    .addHeader("Accept", "application/json")
+                    .addHeader("User-Agent", "IrisCode/1.0")
+                    .build()
+                val releaseResponse = client.newCall(releaseRequest).execute()
+                if (!releaseResponse.isSuccessful) throw RuntimeException("Failed to fetch latest release")
+                val releaseBody = releaseResponse.body!!.string()
 
-            val tagName = Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(releaseBody)?.groupValues?.get(1)
-                ?: throw RuntimeException("Could not parse latest release tag")
-            val zipName = "bootstrap-$arch.zip"
-            val downloadUrl = "https://github.com/termux/termux-packages/releases/download/$tagName/$zipName"
+                val tagName = Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(releaseBody)?.groupValues?.get(1)
+                    ?: throw RuntimeException("Could not parse latest release tag")
+                val zipName = "bootstrap-$arch.zip"
+                val downloadUrl = "https://github.com/termux/termux-packages/releases/download/$tagName/$zipName"
 
-            val homeRequest = Request.Builder().url(downloadUrl).build()
-            val response = client.newCall(homeRequest).execute()
-            if (!response.isSuccessful) throw RuntimeException("Failed to download bootstrap: ${response.code}")
-            val body = response.body ?: throw RuntimeException("Empty response body")
-            val totalBytes = body.contentLength()
-            val inputStream = body.byteStream()
+                val homeRequest = Request.Builder().url(downloadUrl).build()
+                val response = client.newCall(homeRequest).execute()
+                if (!response.isSuccessful) throw RuntimeException("Failed to download bootstrap: ${response.code}")
+                val body = response.body ?: throw RuntimeException("Empty response body")
+                val totalBytes = body.contentLength()
+                val inputStream = body.byteStream()
 
-            onState(BootstrapState.Downloading(0f))
-            val zipBytes = inputStream.readBytes().also {
-                onState(BootstrapState.Downloading(1f))
-            }
+                onState(BootstrapState.Downloading(0f))
+                val zipBytes = inputStream.readBytes().also {
+                    onState(BootstrapState.Downloading(1f))
+                }
 
-            onState(BootstrapState.Extracting)
-            prefixDir.parentFile?.mkdirs()
-            homeDir.mkdirs()
+                onState(BootstrapState.Extracting)
+                prefixDir.parentFile?.mkdirs()
+                homeDir.mkdirs()
 
-            val stagingDir = File(context.filesDir, "termux/staging")
-            stagingDir.mkdirs()
+                val stagingDir = File(context.filesDir, "termux/staging")
+                stagingDir.mkdirs()
 
-            val symlinks = mutableListOf<Pair<String, String>>()
-            val buffer = ByteArray(8192)
+                val symlinks = mutableListOf<Pair<String, String>>()
+                val buffer = ByteArray(8192)
 
-            ZipInputStream(zipBytes.inputStream()).use { zipInput ->
-                var entry = zipInput.nextEntry
-                while (entry != null) {
-                    val name = entry.name
-                    if (name == "SYMLINKS.txt") {
-                        val lines = zipInput.readBytes().decodeToString()
-                        for (line in lines.lines()) {
-                            if (line.isBlank()) continue
-                            val parts = line.split("\u2190")
-                            if (parts.size == 2) {
-                                symlinks.add(parts[0].trim() to "${stagingDir.absolutePath}/${parts[1].trim()}")
-                            }
-                        }
-                    } else {
-                        val target = File(stagingDir, name)
-                        if (entry.isDirectory) {
-                            target.mkdirs()
-                        } else {
-                            target.parentFile?.mkdirs()
-                            FileOutputStream(target).use { out ->
-                                var read: Int
-                                while (zipInput.read(buffer).also { read = it } != -1) {
-                                    out.write(buffer, 0, read)
+                ZipInputStream(zipBytes.inputStream()).use { zipInput ->
+                    var entry = zipInput.nextEntry
+                    while (entry != null) {
+                        val name = entry.name
+                        if (name == "SYMLINKS.txt") {
+                            val lines = zipInput.readBytes().decodeToString()
+                            for (line in lines.lines()) {
+                                if (line.isBlank()) continue
+                                val parts = line.split("\u2190")
+                                if (parts.size == 2) {
+                                    symlinks.add(parts[0].trim() to "${stagingDir.absolutePath}/${parts[1].trim()}")
                                 }
                             }
-                            if (name.startsWith("bin/") || name.startsWith("libexec") ||
-                                name.startsWith("lib/apt/apt-helper") || name.startsWith("lib/apt/methods")
-                            ) {
-                                target.setExecutable(true)
+                        } else {
+                            val target = File(stagingDir, name)
+                            if (entry.isDirectory) {
+                                target.mkdirs()
+                            } else {
+                                target.parentFile?.mkdirs()
+                                FileOutputStream(target).use { out ->
+                                    var read: Int
+                                    while (zipInput.read(buffer).also { read = it } != -1) {
+                                        out.write(buffer, 0, read)
+                                    }
+                                }
+                                if (name.startsWith("bin/") || name.startsWith("libexec") ||
+                                    name.startsWith("lib/apt/apt-helper") || name.startsWith("lib/apt/methods")
+                                ) {
+                                    target.setExecutable(true, false)
+                                }
                             }
                         }
+                        zipInput.closeEntry()
+                        entry = zipInput.nextEntry
                     }
-                    zipInput.closeEntry()
-                    entry = zipInput.nextEntry
                 }
-            }
 
-            for ((oldPath, newPath) in symlinks) {
-                File(newPath).parentFile?.mkdirs()
-                Os.symlink(oldPath, newPath)
-            }
+                for ((oldPath, newPath) in symlinks) {
+                    File(newPath).parentFile?.mkdirs()
+                    Os.symlink(oldPath, newPath)
+                }
 
-            if (!stagingDir.renameTo(prefixDir)) {
-                stagingDir.copyRecursively(prefixDir, overwrite = true)
-                stagingDir.deleteRecursively()
-            }
+                if (!stagingDir.renameTo(prefixDir)) {
+                    stagingDir.copyRecursively(prefixDir, overwrite = true)
+                    stagingDir.deleteRecursively()
+                }
 
-            onState(BootstrapState.Completed)
+                prefixDir.walkTopDown().forEach { file ->
+                    if (file.isFile && (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
+                        file.parent?.endsWith("/libexec") == true)
+                    ) {
+                        file.setExecutable(true, false)
+                    }
+                }
+
+                onState(BootstrapState.Completed)
             }
         } catch (e: Exception) {
             Log.e("TermuxBootstrap", "Bootstrap failed", e)

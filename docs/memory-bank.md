@@ -481,7 +481,7 @@ Priority: project rules > global rules
 - [FIXED] Added required `User-Agent` header to GitHub API requests
 
 ### Known Issues
-- Bootstrap download may fail on first launch if GitHub API rate-limits (429) — now properly logged with status code
+- Bootstrap `Permission denied` — fixed: `setExecutable(true, false)` (owner+group+other), plus post-extraction walk hardening all bin/ files
 - Need to test end-to-end on actual Android device
 
 ## Open Decisions

@@ -455,6 +455,16 @@ class ChatViewModel @Inject constructor(
         _state.value = _state.value.copy(effortLevel = level)
     }
 
+    fun retryBootstrap() {
+        termuxBootstrap.retry()
+        _state.value = _state.value.copy(bootstrapState = BootstrapState.Checking)
+        viewModelScope.launch {
+            termuxBootstrap.install { state ->
+                _state.value = _state.value.copy(bootstrapState = state)
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         terminalManager.destroy()
