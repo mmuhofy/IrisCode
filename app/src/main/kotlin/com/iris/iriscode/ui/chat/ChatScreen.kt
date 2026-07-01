@@ -93,7 +93,8 @@ fun ChatScreen(
                 ChatTab.Terminal -> {
                     TerminalScreen(
                         modifier = Modifier.fillMaxSize(),
-                        terminalManager = viewModel.terminalManager
+                        terminalManager = viewModel.terminalManager,
+                        bootstrapState = state.bootstrapState
                     )
                 }
                 ChatTab.Files -> {

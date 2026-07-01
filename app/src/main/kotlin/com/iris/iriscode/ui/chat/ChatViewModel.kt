@@ -1,6 +1,7 @@
 package com.iris.iriscode.ui.chat
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.iris.iriscode.agent.AgentLoop
 import com.iris.iriscode.agent.AgentSystemPrompt
@@ -12,7 +13,9 @@ import com.iris.iriscode.domain.agent.AgentEvent
 import com.iris.iriscode.domain.agent.ToolResult
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
+import com.iris.iriscode.terminal.BootstrapState
 import com.iris.iriscode.terminal.TerminalManager
+import com.iris.iriscode.terminal.TermuxBootstrap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +44,7 @@ data class ChatUiState(
     val inputText: String = "",
     val isProcessing: Boolean = false,
     val isTyping: Boolean = false,
+    val bootstrapState: BootstrapState = BootstrapState.Checking,
     val workMode: WorkMode = WorkMode.DEFAULT,
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
@@ -60,15 +64,25 @@ data class ChatUiState(
 class ChatViewModel @Inject constructor(
     private val geminiClient: GeminiClient,
     private val preferences: OnboardingPreferences,
-    private val agentLoop: AgentLoop
-) : ViewModel() {
+    private val agentLoop: AgentLoop,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
-    val terminalManager = TerminalManager()
+    private val termuxBootstrap = TermuxBootstrap(application)
+    val terminalManager = TerminalManager(termuxBootstrap)
 
     private val geminiStepHistory = mutableListOf<GeminiStep>()
+
+    init {
+        viewModelScope.launch {
+            termuxBootstrap.install { state ->
+                _state.value = _state.value.copy(bootstrapState = state)
+            }
+        }
+    }
 
     // ─── Public API ──────────────────────────────────────────────────────────
 
