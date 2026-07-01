@@ -25,23 +25,19 @@ class TermuxBootstrap(private val context: Context) {
 
     companion object {
         private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
-        private const val PREFIX_ALT = "/data/data/com.iris.iriscode/pf"
     }
 
-    private val baseDir: File
-        get() = context.filesDir.parentFile ?: File("/data/data/com.iris.iriscode")
-
     private val prefixDir: File
-        get() = File(baseDir, "pf")
+        get() = File(context.filesDir, "termux/usr")
 
     private val homeDir: File
-        get() = File(baseDir, "home")
+        get() = File(context.filesDir, "termux/home")
 
     val isInstalled: Boolean
         get() = File(prefixDir, "bin/bash").canExecute()
 
     val shellPath: String
-        get() = "${PREFIX_ALT}/bin/bash"
+        get() = File(prefixDir, "bin/bash").absolutePath
 
     val defaultCwd: String
         get() = homeDir.absolutePath
@@ -65,42 +61,32 @@ class TermuxBootstrap(private val context: Context) {
         runInstall(onState)
     }
 
-    private fun findPattern(bytes: ByteArray, pattern: ByteArray, start: Int): Int {
-        if (start + pattern.size > bytes.size) return -1
-        outer@ for (i in start..bytes.size - pattern.size) {
-            for (j in pattern.indices) {
-                if (bytes[i + j] != pattern[j]) continue@outer
-            }
-            return i
-        }
-        return -1
+    private fun isElf(bytes: ByteArray): Boolean {
+        return bytes.size >= 4 &&
+            bytes[0] == 0x7f.toByte() &&
+            bytes[1] == 'E'.code.toByte() &&
+            bytes[2] == 'L'.code.toByte() &&
+            bytes[3] == 'F'.code.toByte()
     }
 
     private fun fixTermuxPrefix() {
-        val termuxBytes = TERMUX_PREFIX.encodeToByteArray()
-        val ourBytes = PREFIX_ALT.encodeToByteArray()
+        val actualPrefix = prefixDir.absolutePath
         prefixDir.walkTopDown().forEach { file ->
             if (!file.isFile) return@forEach
             try {
                 val bytes = file.readBytes()
-                if (bytes.size < termuxBytes.size) return@forEach
-                var modified = false
-                var start = 0
-                while (true) {
-                    val idx = findPattern(bytes, termuxBytes, start)
-                    if (idx < 0) break
-                    ourBytes.copyInto(bytes, destinationOffset = idx)
-                    start = idx + ourBytes.size
-                    modified = true
-                }
-                if (modified) file.writeBytes(bytes)
+                if (bytes.size < 4 || isElf(bytes)) return@forEach
+                val text = bytes.decodeToString()
+                if (!text.contains(TERMUX_PREFIX)) return@forEach
+                val fixed = text.replace(TERMUX_PREFIX, actualPrefix)
+                file.writeBytes(fixed.encodeToByteArray())
             } catch (_: Exception) {}
         }
     }
 
     fun retry() {
+        File(context.filesDir, "termux/staging").deleteRecursively()
         prefixDir.deleteRecursively()
-        homeDir.deleteRecursively()
     }
 
     private suspend fun runInstall(onState: (BootstrapState) -> Unit) {
@@ -142,11 +128,8 @@ class TermuxBootstrap(private val context: Context) {
                 onState(BootstrapState.Extracting)
                 prefixDir.parentFile?.mkdirs()
                 homeDir.mkdirs()
-                File(prefixDir, "tmp").mkdirs()
-                // Clean up any old-format directories from previous installations
-                File(context.filesDir, "termux").deleteRecursively()
 
-                val stagingDir = File(baseDir, "pf-staging")
+                val stagingDir = File(context.filesDir, "termux/staging")
                 stagingDir.mkdirs()
 
                 val symlinks = mutableListOf<Pair<String, String>>()
@@ -190,13 +173,23 @@ class TermuxBootstrap(private val context: Context) {
                 }
 
                 for ((oldPath, newPath) in symlinks) {
-                    File(newPath).parentFile?.mkdirs()
+                    val linkFile = File(newPath)
+                    linkFile.parentFile?.mkdirs()
+                    linkFile.delete()
                     Os.symlink(oldPath, newPath)
                 }
 
                 if (!stagingDir.renameTo(prefixDir)) {
                     stagingDir.copyRecursively(prefixDir, overwrite = true)
                     stagingDir.deleteRecursively()
+                }
+
+                prefixDir.walkTopDown().forEach { file ->
+                    if (file.isFile && (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
+                        file.parent?.endsWith("/libexec") == true)
+                    ) {
+                        file.setExecutable(true, false)
+                    }
                 }
 
                 fixTermuxPrefix()
@@ -217,18 +210,18 @@ class TermuxBootstrap(private val context: Context) {
                 env.add("$key=$value")
             }
         } catch (_: Exception) {}
-        val prefixLib = "${PREFIX_ALT}/lib"
+        val prefixLib = "${prefixDir.absolutePath}/lib"
         env.add("TERM=xterm-256color")
         env.add("HOME=${homeDir.absolutePath}")
-        env.add("PREFIX=$PREFIX_ALT")
-        env.add("TMPDIR=${PREFIX_ALT}/tmp")
+        env.add("PREFIX=${prefixDir.absolutePath}")
+        env.add("TMPDIR=${File(context.filesDir, "termux/tmp").absolutePath}")
         env.add("SHELL=$shellPath")
         env.add("LD_LIBRARY_PATH=$prefixLib")
         val termuxExec = File(prefixLib, "libtermux-exec.so")
         if (termuxExec.exists()) {
-            env.add("LD_PRELOAD=$prefixLib/libtermux-exec.so")
+            env.add("LD_PRELOAD=${termuxExec.absolutePath}")
         }
-        env.add("PATH=${PREFIX_ALT}/bin:/system/bin")
+        env.add("PATH=${prefixDir.absolutePath}/bin:/system/bin")
         return env.toTypedArray()
     }
 }
