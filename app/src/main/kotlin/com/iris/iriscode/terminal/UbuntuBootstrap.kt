@@ -130,19 +130,6 @@ private fun configureRootfs(rootfsArch: String) {
             export HOME=/root
             export TERM=xterm-256color
             export LANG=C.UTF-8
-            PS1='\[\033[01;35m\]\u@iriscode\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-            alias ll='ls -la'
-            alias la='ls -A'
-            """.trimIndent() + "\n"
-        )
-    }
-
-        File(rootfsDir, "root/.bashrc").writeText(
-            """
-            export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-            export HOME=/root
-            export TERM=xterm-256color
-            export LANG=C.UTF-8
             export PROOT_TMP_DIR=/tmp
             export TMPDIR=/tmp
             export TEMP=/tmp
