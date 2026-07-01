@@ -25,19 +25,23 @@ class TermuxBootstrap(private val context: Context) {
 
     companion object {
         private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
+        private const val PREFIX_ALT = "/data/data/com.iris.iriscode/pf"
     }
 
+    private val baseDir: File
+        get() = context.filesDir.parentFile ?: File("/data/data/com.iris.iriscode")
+
     private val prefixDir: File
-        get() = File(context.filesDir, "termux/usr")
+        get() = File(baseDir, "pf")
 
     private val homeDir: File
-        get() = File(context.filesDir, "termux/home")
+        get() = File(baseDir, "home")
 
     val isInstalled: Boolean
         get() = File(prefixDir, "bin/bash").canExecute()
 
     val shellPath: String
-        get() = File(prefixDir, "bin/bash").absolutePath
+        get() = "${PREFIX_ALT}/bin/bash"
 
     val defaultCwd: String
         get() = homeDir.absolutePath
@@ -54,9 +58,7 @@ class TermuxBootstrap(private val context: Context) {
     suspend fun install(onState: (BootstrapState) -> Unit) {
         onState(BootstrapState.Checking)
         if (isInstalled) {
-            withContext(Dispatchers.IO) {
-                fixTermuxPrefix()
-            }
+            withContext(Dispatchers.IO) { fixTermuxPrefix() }
             onState(BootstrapState.AlreadyInstalled)
             return
         }
@@ -64,26 +66,30 @@ class TermuxBootstrap(private val context: Context) {
     }
 
     private fun fixTermuxPrefix() {
-        val actualPrefix = prefixDir.absolutePath
+        val termuxBytes = TERMUX_PREFIX.encodeToByteArray()
+        val ourBytes = PREFIX_ALT.encodeToByteArray()
         prefixDir.walkTopDown().forEach { file ->
             if (!file.isFile) return@forEach
             try {
                 val bytes = file.readBytes()
-                if (bytes.size < 4) return@forEach
-                // Skip ELF binaries — termux-exec LD_PRELOAD handles those at runtime
-                if (bytes[0] == 0x7f.toByte() && bytes[1] == 'E'.code.toByte() &&
-                    bytes[2] == 'L'.code.toByte() && bytes[3] == 'F'.code.toByte()
-                ) return@forEach
-                if (!bytes.decodeToString().contains(TERMUX_PREFIX)) return@forEach
-                val fixed = bytes.decodeToString().replace(TERMUX_PREFIX, actualPrefix)
-                file.writeBytes(fixed.encodeToByteArray())
+                if (bytes.size < termuxBytes.size) return@forEach
+                var modified = false
+                var start = 0
+                while (true) {
+                    val idx = bytes.indexOf(termuxBytes, start)
+                    if (idx < 0) break
+                    ourBytes.copyInto(bytes, destinationOffset = idx)
+                    start = idx + ourBytes.size
+                    modified = true
+                }
+                if (modified) file.writeBytes(bytes)
             } catch (_: Exception) {}
         }
     }
 
     fun retry() {
-        File(context.filesDir, "termux/staging").deleteRecursively()
         prefixDir.deleteRecursively()
+        homeDir.deleteRecursively()
     }
 
     private suspend fun runInstall(onState: (BootstrapState) -> Unit) {
@@ -91,7 +97,6 @@ class TermuxBootstrap(private val context: Context) {
             onState(BootstrapState.AlreadyInstalled)
             return
         }
-
         try {
             withContext(Dispatchers.IO) {
                 val arch = archMap[Build.SUPPORTED_ABIS[0]]
@@ -116,7 +121,6 @@ class TermuxBootstrap(private val context: Context) {
                 val response = client.newCall(homeRequest).execute()
                 if (!response.isSuccessful) throw RuntimeException("Failed to download bootstrap: ${response.code}")
                 val body = response.body ?: throw RuntimeException("Empty response body")
-                val totalBytes = body.contentLength()
                 val inputStream = body.byteStream()
 
                 onState(BootstrapState.Downloading(0f))
@@ -127,8 +131,11 @@ class TermuxBootstrap(private val context: Context) {
                 onState(BootstrapState.Extracting)
                 prefixDir.parentFile?.mkdirs()
                 homeDir.mkdirs()
+                File(prefixDir, "tmp").mkdirs()
+                // Clean up any old-format directories from previous installations
+                File(context.filesDir, "termux").deleteRecursively()
 
-                val stagingDir = File(context.filesDir, "termux/staging")
+                val stagingDir = File(baseDir, "pf-staging")
                 stagingDir.mkdirs()
 
                 val symlinks = mutableListOf<Pair<String, String>>()
@@ -181,14 +188,6 @@ class TermuxBootstrap(private val context: Context) {
                     stagingDir.deleteRecursively()
                 }
 
-                prefixDir.walkTopDown().forEach { file ->
-                    if (file.isFile && (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
-                        file.parent?.endsWith("/libexec") == true)
-                    ) {
-                        file.setExecutable(true, false)
-                    }
-                }
-
                 fixTermuxPrefix()
 
                 onState(BootstrapState.Completed)
@@ -207,18 +206,18 @@ class TermuxBootstrap(private val context: Context) {
                 env.add("$key=$value")
             }
         } catch (_: Exception) {}
-        val prefixLib = "${prefixDir.absolutePath}/lib"
+        val prefixLib = "${PREFIX_ALT}/lib"
         env.add("TERM=xterm-256color")
         env.add("HOME=${homeDir.absolutePath}")
-        env.add("PREFIX=${prefixDir.absolutePath}")
-        env.add("TMPDIR=${File(context.filesDir, "termux/tmp").absolutePath}")
+        env.add("PREFIX=$PREFIX_ALT")
+        env.add("TMPDIR=${PREFIX_ALT}/tmp")
         env.add("SHELL=$shellPath")
         env.add("LD_LIBRARY_PATH=$prefixLib")
         val termuxExec = File(prefixLib, "libtermux-exec.so")
         if (termuxExec.exists()) {
-            env.add("LD_PRELOAD=${termuxExec.absolutePath}")
+            env.add("LD_PRELOAD=$prefixLib/libtermux-exec.so")
         }
-        env.add("PATH=${prefixDir.absolutePath}/bin:/system/bin")
+        env.add("PATH=${PREFIX_ALT}/bin:/system/bin")
         return env.toTypedArray()
     }
 }
