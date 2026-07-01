@@ -77,21 +77,21 @@ fun ChatScreen(
             onMoreDismiss = viewModel::dismissMoreMenu
         )
 
-        Column(
+        PillTabs(
+            selectedTab = state.selectedTab,
+            onTabSelect = viewModel::setTab
+        )
+
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .background(IrisBackground)
         ) {
-            PillTabs(
-                selectedTab = state.selectedTab,
-                onTabSelect = viewModel::setTab
-            )
-
             when (state.selectedTab) {
                 ChatTab.Terminal -> {
-                    TerminalScreen(modifier = Modifier.weight(1f).fillMaxWidth())
+                    TerminalScreen(modifier = Modifier.fillMaxSize())
                 }
                 ChatTab.Files -> {
                     FilesTab()
