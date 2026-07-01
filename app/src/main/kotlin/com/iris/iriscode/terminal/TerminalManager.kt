@@ -4,7 +4,6 @@ import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalView
 
 class TerminalManager(
-    private val termuxBootstrap: TermuxBootstrap,
     private val ubuntuBootstrap: UbuntuBootstrap
 ) {
     var currentSession: TerminalSession? = null
@@ -43,15 +42,11 @@ class TerminalManager(
             return session
         }
 
-        val shellPath = termuxBootstrap.shellPath
-        val cwd = termuxBootstrap.defaultCwd
-        val env = termuxBootstrap.buildEnv()
-
         val session = TerminalSession(
-            shellPath,
-            cwd,
-            arrayOf(shellPath),
-            env,
+            "/system/bin/sh",
+            "/",
+            arrayOf("sh"),
+            arrayOf("PATH=/system/bin:/system/xbin", "HOME=/", "TERM=vt100"),
             3000,
             sessionClient
         )

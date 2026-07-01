@@ -94,8 +94,8 @@ fun ChatScreen(
                     TerminalScreen(
                         modifier = Modifier.fillMaxSize(),
                         terminalManager = viewModel.terminalManager,
-                        bootstrapState = state.bootstrapState,
-                        onRetry = viewModel::retryBootstrap
+                        ubuntuSetupState = state.ubuntuSetupState,
+                        onRetry = viewModel::retryUbuntuSetup
                     )
                 }
                 ChatTab.Files -> {

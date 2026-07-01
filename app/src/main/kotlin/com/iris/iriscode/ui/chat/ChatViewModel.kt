@@ -13,9 +13,7 @@ import com.iris.iriscode.domain.agent.AgentEvent
 import com.iris.iriscode.domain.agent.ToolResult
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
-import com.iris.iriscode.terminal.BootstrapState
 import com.iris.iriscode.terminal.TerminalManager
-import com.iris.iriscode.terminal.TermuxBootstrap
 import com.iris.iriscode.terminal.UbuntuBootstrap
 import com.iris.iriscode.terminal.UbuntuSetupState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,7 +44,6 @@ data class ChatUiState(
     val inputText: String = "",
     val isProcessing: Boolean = false,
     val isTyping: Boolean = false,
-    val bootstrapState: BootstrapState = BootstrapState.Checking,
     val ubuntuSetupState: UbuntuSetupState = UbuntuSetupState.Checking,
     val workMode: WorkMode = WorkMode.DEFAULT,
     val currentModel: String = "flash",
@@ -74,9 +71,8 @@ class ChatViewModel @Inject constructor(
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
-    private val termuxBootstrap = TermuxBootstrap(application)
     private val ubuntuBootstrap = UbuntuBootstrap(application)
-    val terminalManager = TerminalManager(termuxBootstrap, ubuntuBootstrap)
+    val terminalManager = TerminalManager(ubuntuBootstrap)
 
     private val geminiStepHistory = mutableListOf<GeminiStep>()
 
@@ -84,11 +80,6 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             ubuntuBootstrap.install { state ->
                 _state.value = _state.value.copy(ubuntuSetupState = state)
-            }
-        }
-        viewModelScope.launch {
-            termuxBootstrap.install { state ->
-                _state.value = _state.value.copy(bootstrapState = state)
             }
         }
     }
@@ -458,16 +449,6 @@ class ChatViewModel @Inject constructor(
 
     fun setEffortLevel(level: String) {
         _state.value = _state.value.copy(effortLevel = level)
-    }
-
-    fun retryBootstrap() {
-        termuxBootstrap.retry()
-        _state.value = _state.value.copy(bootstrapState = BootstrapState.Checking)
-        viewModelScope.launch {
-            termuxBootstrap.install { state ->
-                _state.value = _state.value.copy(bootstrapState = state)
-            }
-        }
     }
 
     fun retryUbuntuSetup() {

@@ -22,9 +22,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.iris.iriscode.terminal.BootstrapState
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
+import com.iris.iriscode.terminal.UbuntuSetupState
 import com.termux.view.TerminalView
 import kotlin.math.roundToInt
 
@@ -32,7 +32,7 @@ import kotlin.math.roundToInt
 fun TerminalScreen(
     modifier: Modifier = Modifier,
     terminalManager: TerminalManager,
-    bootstrapState: BootstrapState,
+    ubuntuSetupState: UbuntuSetupState,
     onRetry: () -> Unit = {}
 ) {
     val fontSize = remember { mutableIntStateOf(12) }
@@ -51,13 +51,21 @@ fun TerminalScreen(
         }
     }
 
-    when (bootstrapState) {
-        is BootstrapState.Checking, is BootstrapState.Downloading, is BootstrapState.Extracting -> {
+    when (ubuntuSetupState) {
+        is UbuntuSetupState.Checking, 
+        is UbuntuSetupState.DownloadingProot, 
+        is UbuntuSetupState.DownloadingRootfs, 
+        is UbuntuSetupState.Extracting, 
+        is UbuntuSetupState.Configuring -> {
             Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                val msg = when (bootstrapState) {
-                    is BootstrapState.Checking -> "Checking Termux environment..."
-                    is BootstrapState.Downloading -> "Downloading Termux environment (${(bootstrapState.progress * 100).toInt()}%)..."
-                    is BootstrapState.Extracting -> "Extracting Termux environment..."
+                val msg = when (ubuntuSetupState) {
+                    is UbuntuSetupState.Checking -> "Checking Ubuntu environment..."
+                    is UbuntuSetupState.DownloadingProot -> 
+                        "Downloading PRoot (${(ubuntuSetupState.progress * 100).toInt()}%)..."
+                    is UbuntuSetupState.DownloadingRootfs -> 
+                        "Downloading Ubuntu rootfs (${(ubuntuSetupState.progress * 100).toInt()}%)..."
+                    is UbuntuSetupState.Extracting -> "Extracting Ubuntu rootfs..."
+                    is UbuntuSetupState.Configuring -> "Configuring Ubuntu rootfs..."
                     else -> ""
                 }
                 CircularProgressIndicator()
@@ -70,7 +78,7 @@ fun TerminalScreen(
             }
         }
 
-        is BootstrapState.Completed, is BootstrapState.AlreadyInstalled -> {
+        is UbuntuSetupState.Ready -> {
             val focusRequester = remember { FocusRequester() }
 
             LaunchedEffect(Unit) {
@@ -111,7 +119,7 @@ fun TerminalScreen(
             )
         }
 
-        is BootstrapState.Failed -> {
+        is UbuntuSetupState.Failed -> {
             Box(modifier = modifier, contentAlignment = Alignment.Center) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -123,7 +131,7 @@ fun TerminalScreen(
                         color = MaterialTheme.colorScheme.error
                     )
                     Text(
-                        text = bootstrapState.message,
+                        text = ubuntuSetupState.error,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -135,5 +143,7 @@ fun TerminalScreen(
                 }
             }
         }
+
+        is UbuntuSetupState.Idle -> { }
     }
 }
