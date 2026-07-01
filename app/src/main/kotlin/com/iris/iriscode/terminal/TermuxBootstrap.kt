@@ -23,6 +23,10 @@ sealed class BootstrapState {
 
 class TermuxBootstrap(private val context: Context) {
 
+    companion object {
+        private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
+    }
+
     private val prefixDir: File
         get() = File(context.filesDir, "termux/usr")
 
@@ -152,11 +156,17 @@ class TermuxBootstrap(private val context: Context) {
                     stagingDir.deleteRecursively()
                 }
 
+                val actualPrefix = prefixDir.absolutePath
                 prefixDir.walkTopDown().forEach { file ->
-                    if (file.isFile && (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
-                        file.parent?.endsWith("/libexec") == true)
-                    ) {
-                        file.setExecutable(true, false)
+                    if (file.isFile) {
+                        if (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
+                            file.parent?.endsWith("/libexec") == true
+                        ) {
+                            file.setExecutable(true, false)
+                        }
+                        if (file.parent?.endsWith("/bin") == true || file.parent?.endsWith("/libexec") == true) {
+                            fixShebang(file, actualPrefix)
+                        }
                     }
                 }
 
@@ -166,6 +176,21 @@ class TermuxBootstrap(private val context: Context) {
             Log.e("TermuxBootstrap", "Bootstrap failed", e)
             onState(BootstrapState.Failed("${e::class.simpleName}: ${e.message ?: "Unknown error"}"))
         }
+    }
+
+    private fun fixShebang(file: File, actualPrefix: String) {
+        try {
+            val bytes = file.readBytes()
+            if (bytes.size < 2 || bytes[0] != '#'.code.toByte() || bytes[1] != '!'.code.toByte()) return
+            val firstLineEnd = bytes.indexOf('\n'.code.toByte())
+            if (firstLineEnd == -1) return
+            val shebang = bytes.decodeToString(0, firstLineEnd)
+            if (shebang.contains(TERMUX_PREFIX)) {
+                val fixed = shebang.replace(TERMUX_PREFIX, actualPrefix)
+                val newBytes = fixed.encodeToByteArray() + bytes.copyOfRange(firstLineEnd, bytes.size)
+                file.writeBytes(newBytes)
+            }
+        } catch (_: Exception) {}
     }
 
     fun buildEnv(): Array<String> {

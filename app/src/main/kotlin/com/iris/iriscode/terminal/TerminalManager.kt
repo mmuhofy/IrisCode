@@ -32,7 +32,7 @@ class TerminalManager(private val bootstrap: TermuxBootstrap) {
         val session = TerminalSession(
             shellPath,
             cwd,
-            arrayOf(shellPath, "--norc"),
+            arrayOf(shellPath),
             env,
             3000,
             sessionClient
