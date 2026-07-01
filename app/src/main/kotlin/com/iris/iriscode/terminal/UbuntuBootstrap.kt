@@ -180,6 +180,9 @@ class UbuntuBootstrap(private val context: Context) {
             fi
             """.trimIndent() + "\n"
         )
+        
+        // Ensure apt is available - install if missing
+        installAptIfMissing()
     }
 
     fun retry() {
@@ -452,5 +455,38 @@ class UbuntuBootstrap(private val context: Context) {
             .takeWhile { it != 0.toByte() }
             .toByteArray()
             .decodeToString()
+    }
+
+    // ─── Ensure apt is available ───────────────────────────────────────────────
+
+    private fun installAptIfMissing() {
+        val aptBinary = File(rootfsDir, "usr/bin/apt")
+        if (!aptBinary.exists()) {
+            try {
+                // Run apt update && apt install -y apt inside PRoot
+                val prootCmd = listOf(
+                    prootPath,
+                    "--link2symlink",
+                    "-r", rootfsPath,
+                    "-b", "/system:/system",
+                    "-b", "/vendor:/vendor",
+                    "-b", "/apex:/apex",
+                    "-b", "/dev:/dev",
+                    "-b", "/proc:/proc",
+                    "-b", "/sys:/sys",
+                    "-b", "/storage/self/primary:/sdcard",
+                    "-w", "/root",
+                    "/bin/bash", "-c", "apt update && apt install -y apt"
+                )
+                val process = ProcessBuilder(prootCmd).redirectErrorStream(true).start()
+                val exitCode = process.waitFor()
+                if (exitCode != 0) {
+                    val output = process.inputStream.readBytes().decodeToString()
+                    Log.w("UbuntuBootstrap", "apt install failed (exit $exitCode): $output")
+                }
+            } catch (e: Exception) {
+                Log.w("UbuntuBootstrap", "Failed to install apt: $e")
+            }
+        }
     }
 }

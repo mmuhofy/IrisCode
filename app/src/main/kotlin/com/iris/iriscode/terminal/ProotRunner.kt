@@ -8,7 +8,6 @@ class ProotRunner(
     val prootPath: String get() = bootstrap.prootFile.absolutePath
     val rootfsPath: String get() = bootstrap.rootfsDir.absolutePath
     private val baseDir: File get() = bootstrap.rootfsDir.parentFile!!
-    private val homePath: String get() = File(baseDir, "home").absolutePath
     private val tmpPath: String get() = File(baseDir, "tmp").absolutePath
     private val libPath: String get() = File(baseDir, "lib").absolutePath
     private val loaderPath: String get() = File(baseDir, "libexec/proot/loader").absolutePath
@@ -22,10 +21,8 @@ class ProotRunner(
 
     fun build(): ProotCommand {
         File(tmpPath).mkdirs()
-        File(homePath).mkdirs()
 
         // Ensure guest paths exist in rootfs for bind mounts
-        File(rootfsPath, "root").mkdirs()
         File(rootfsPath, "tmp").mkdirs()
 
         val binds = mutableListOf<String>().apply {
@@ -36,7 +33,6 @@ class ProotRunner(
             add("-b"); add("/proc:/proc")
             add("-b"); add("/sys:/sys")
             add("-b"); add("/storage/self/primary:/sdcard")
-            add("-b"); add("$homePath:/root")
             add("-b"); add("$tmpPath:/tmp")
         }
 

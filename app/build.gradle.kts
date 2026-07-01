@@ -99,6 +99,9 @@ dependencies {
     // Security
     implementation(libs.security.crypto)
     
+    // Accompanist Insets (IME keyboard handling)
+    implementation(libs.accompanist.insets)
+
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
