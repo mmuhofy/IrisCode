@@ -40,7 +40,7 @@ class UbuntuBootstrap(private val context: Context) {
     }
 
     private val baseDir: File get() = File(context.filesDir, "ubuntu")
-    val prootFile: File get() = File(baseDir, "proot")
+    val prootFile: File get() = File(baseDir, "bin/proot")
     val prootLoaderDir: File get() = File(baseDir, "libexec/proot")
     val libDir: File get() = File(baseDir, "lib")
     val rootfsDir: File get() = File(baseDir, "rootfs")
@@ -48,7 +48,7 @@ class UbuntuBootstrap(private val context: Context) {
     private val tmpDir: File get() = File(baseDir, "tmp")
 
     val isInstalled: Boolean
-        get() = prootFile.canExecute() && File(rootfsDir, "bin/bash").canExecute()
+        get() = prootFile.canExecute() && File(prootLoaderDir, "loader").canExecute() && File(rootfsDir, "bin/bash").canExecute()
 
     val prootPath: String get() = prootFile.absolutePath
     val prootLoaderPath: String get() = File(prootLoaderDir, "loader").absolutePath
@@ -81,8 +81,6 @@ class UbuntuBootstrap(private val context: Context) {
                 baseDir.mkdirs()
                 homeDir.mkdirs()
                 tmpDir.mkdirs()
-                libDir.mkdirs()
-                prootLoaderDir.mkdirs()
 
                 // 1. Download Termux PRoot package
                 onState(UbuntuSetupState.DownloadingProot(0f))
@@ -103,17 +101,17 @@ class UbuntuBootstrap(private val context: Context) {
                 downloadFile(shmemUrl, shmemDeb) { progress ->
                     onState(UbuntuSetupState.DownloadingLibandroidShmem(progress))
                 }
-                extractDeb(shmemDeb, libDir, setOf("lib/libandroid-shmem.so"))
+                extractDeb(shmemDeb, baseDir, setOf("lib/libandroid-shmem.so"))
                 shmemDeb.delete()
 
                 // 3. Download libtalloc
                 onState(UbuntuSetupState.DownloadingLibtalloc(0f))
                 val tallocUrl = "$TERMUX_REPO/pool/main/libt/libtalloc/libtalloc_${LIBTALLOC_VERSION}_${termuxArch}.deb"
-                val tallocDeb = File(tmpDir, "libtalloc.deb")
+                val tallocDeb = File(tmpDir, "talloc.deb")
                 downloadFile(tallocUrl, tallocDeb) { progress ->
                     onState(UbuntuSetupState.DownloadingLibtalloc(progress))
                 }
-                extractDeb(tallocDeb, libDir, setOf("lib/libtalloc.so.2", "lib/libtalloc.so.2.4.3"))
+                extractDeb(tallocDeb, baseDir, setOf("lib/libtalloc.so.2", "lib/libtalloc.so.2.4.3"))
                 tallocDeb.delete()
 
                 // 4. Download Ubuntu rootfs
@@ -300,7 +298,7 @@ class UbuntuBootstrap(private val context: Context) {
                             left -= read
                         }
                     }
-                    if (finalName.endsWith(".so") || finalName == "proot" || finalName == "loader") {
+                    if (finalName.endsWith(".so") || finalName.contains("proot") || finalName.contains("loader")) {
                         entry.setExecutable(true, false)
                     }
                 } else {
