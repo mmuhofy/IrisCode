@@ -36,9 +36,6 @@ fun TerminalScreen(
                 if (view.mTermSession != session) {
                     view.attachSession(session)
                 }
-                if (view.isAttachedToWindow) {
-                    view.updateSize()
-                }
             }
         }
     )
