@@ -7,8 +7,11 @@ class ProotRunner(
 ) {
     val prootPath: String get() = bootstrap.prootFile.absolutePath
     val rootfsPath: String get() = bootstrap.rootfsDir.absolutePath
-    private val homePath: String get() = File(bootstrap.rootfsDir.parentFile!!, "home").absolutePath
-    private val tmpPath: String get() = File(bootstrap.rootfsDir.parentFile!!, "tmp").absolutePath
+    private val baseDir: File get() = bootstrap.rootfsDir.parentFile!!
+    private val homePath: String get() = File(baseDir, "home").absolutePath
+    private val tmpPath: String get() = File(baseDir, "tmp").absolutePath
+    private val libPath: String get() = File(baseDir, "lib").absolutePath
+    private val loaderPath: String get() = File(baseDir, "libexec/proot/loader").absolutePath
 
     data class ProotCommand(
         val executable: String,
@@ -55,6 +58,9 @@ class ProotRunner(
             add("SHELL=/bin/bash")
             add("TMPDIR=/tmp")
             add("PROOT_TMP_DIR=/tmp")
+            // Termux PRoot needs its bundled libraries and loader
+            add("LD_LIBRARY_PATH=$libPath")
+            add("PROOT_LOADER=$loaderPath")
             try {
                 val systemEnv = System.getenv()
                 for ((key, value) in systemEnv) {

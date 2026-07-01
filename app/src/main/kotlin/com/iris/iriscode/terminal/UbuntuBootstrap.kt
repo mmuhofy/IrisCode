@@ -14,33 +14,45 @@ import java.io.FileOutputStream
 import java.util.zip.GZIPInputStream
 
 // Inspired by: github.com/termux/termux-app termux-bootstrap and proot-me/proot
+// Uses Termux's Android-compatible PRoot (5.1.107.81) with libandroid-shmem + libtalloc
 class UbuntuBootstrap(private val context: Context) {
 
     companion object {
-        private const val PROOT_VERSION = "v5.2.0"
         private const val UBUNTU_VERSION = "24.04.4"
+        private const val TERMUX_PROOT_VERSION = "5.1.107.81"
+        private const val LIBANDROID_SHMEM_VERSION = "0.7"
+        private const val LIBTALLOC_VERSION = "2.4.3"
+        private const val TERMUX_REPO = "https://packages.termux.dev/apt/termux-main"
 
-        private val PROOT_ARCH_MAP = mapOf(
+        private val TERMUX_ARCH_MAP = mapOf(
             "arm64-v8a" to "aarch64",
             "armeabi-v7a" to "arm",
-            "x86_64" to "x86_64"
+            "x86_64" to "x86_64",
+            "x86" to "i686"
         )
 
         private val ROOTFS_ARCH_MAP = mapOf(
             "arm64-v8a" to "arm64",
             "armeabi-v7a" to "armhf",
-            "x86_64" to "amd64"
+            "x86_64" to "amd64",
+            "x86" to "i386"
         )
     }
 
     private val baseDir: File get() = File(context.filesDir, "ubuntu")
     val prootFile: File get() = File(baseDir, "proot")
+    val prootLoaderDir: File get() = File(baseDir, "libexec/proot")
+    val libDir: File get() = File(baseDir, "lib")
     val rootfsDir: File get() = File(baseDir, "rootfs")
     private val homeDir: File get() = File(baseDir, "home")
     private val tmpDir: File get() = File(baseDir, "tmp")
 
     val isInstalled: Boolean
         get() = prootFile.canExecute() && File(rootfsDir, "bin/bash").canExecute()
+
+    val prootPath: String get() = prootFile.absolutePath
+    val prootLoaderPath: String get() = File(prootLoaderDir, "loader").absolutePath
+    val libPath: String get() = libDir.absolutePath
 
     private val client = OkHttpClient.Builder()
         .followRedirects(true)
@@ -57,33 +69,56 @@ class UbuntuBootstrap(private val context: Context) {
 
     private suspend fun runInstall(onState: (UbuntuSetupState) -> Unit) {
         val arch = Build.SUPPORTED_ABIS[0]
-        val prootArch = PROOT_ARCH_MAP[arch]
+        val termuxArch = TERMUX_ARCH_MAP[arch]
             ?: return onState(UbuntuSetupState.Failed("Unsupported arch: $arch"))
         val rootfsArch = ROOTFS_ARCH_MAP[arch]
             ?: return onState(UbuntuSetupState.Failed("Unsupported arch: $arch"))
 
         try {
             withContext(Dispatchers.IO) {
-                // Clean up any leftover Termux directories from previous installs
                 File(context.filesDir, "termux").deleteRecursively()
-                
+
                 baseDir.mkdirs()
                 homeDir.mkdirs()
                 tmpDir.mkdirs()
+                libDir.mkdirs()
+                prootLoaderDir.mkdirs()
 
+                // 1. Download Termux PRoot package
                 onState(UbuntuSetupState.DownloadingProot(0f))
-                val prootUrl =
-                    "https://github.com/proot-me/proot/releases/download/$PROOT_VERSION/proot-$PROOT_VERSION-$prootArch-static"
-                downloadFile(prootUrl, prootFile) { progress ->
+                val prootUrl = "$TERMUX_REPO/pool/main/p/proot/proot_${TERMUX_PROOT_VERSION}_${termuxArch}.deb"
+                val prootDeb = File(tmpDir, "proot.deb")
+                downloadFile(prootUrl, prootDeb) { progress ->
                     onState(UbuntuSetupState.DownloadingProot(progress))
                 }
+                extractDeb(prootDeb, baseDir, setOf("bin/proot", "libexec/proot/loader"))
                 prootFile.setExecutable(true, false)
+                File(prootLoaderDir, "loader").setExecutable(true, false)
+                prootDeb.delete()
 
+                // 2. Download libandroid-shmem
+                onState(UbuntuSetupState.DownloadingLibandroidShmem(0f))
+                val shmemUrl = "$TERMUX_REPO/pool/main/liba/libandroid-shmem/libandroid-shmem_${LIBANDROID_SHMEM_VERSION}_${termuxArch}.deb"
+                val shmemDeb = File(tmpDir, "libandroid-shmem.deb")
+                downloadFile(shmemUrl, shmemDeb) { progress ->
+                    onState(UbuntuSetupState.DownloadingLibandroidShmem(progress))
+                }
+                extractDeb(shmemDeb, libDir, setOf("lib/libandroid-shmem.so"))
+                shmemDeb.delete()
+
+                // 3. Download libtalloc
+                onState(UbuntuSetupState.DownloadingLibtalloc(0f))
+                val tallocUrl = "$TERMUX_REPO/pool/main/libt/libtalloc/libtalloc_${LIBTALLOC_VERSION}_${termuxArch}.deb"
+                val tallocDeb = File(tmpDir, "libtalloc.deb")
+                downloadFile(tallocUrl, tallocDeb) { progress ->
+                    onState(UbuntuSetupState.DownloadingLibtalloc(progress))
+                }
+                extractDeb(tallocDeb, libDir, setOf("lib/libtalloc.so.2", "lib/libtalloc.so.2.4.3"))
+                tallocDeb.delete()
+
+                // 4. Download Ubuntu rootfs
                 onState(UbuntuSetupState.DownloadingRootfs(0f))
-
-                // UNTESTED — verify before use
-                val rootfsUrl =
-                    "https://cdimage.ubuntu.com/ubuntu-base/releases/$UBUNTU_VERSION/release/ubuntu-base-$UBUNTU_VERSION-base-$rootfsArch.tar.gz"
+                val rootfsUrl = "https://cdimage.ubuntu.com/ubuntu-base/releases/$UBUNTU_VERSION/release/ubuntu-base-$UBUNTU_VERSION-base-$rootfsArch.tar.gz"
                 val rootfsTmp = File(tmpDir, "ubuntu-base.tar.gz")
                 downloadFile(rootfsUrl, rootfsTmp) { progress ->
                     onState(UbuntuSetupState.DownloadingRootfs(progress))
@@ -105,7 +140,7 @@ class UbuntuBootstrap(private val context: Context) {
         }
     }
 
-private fun configureRootfs(rootfsArch: String) {
+    private fun configureRootfs(rootfsArch: String) {
         val mirror = if (rootfsArch == "amd64") "archive.ubuntu.com/ubuntu" else "ports.ubuntu.com/ubuntu-ports"
 
         File(rootfsDir, "etc/resolv.conf").writeText(
@@ -166,7 +201,125 @@ private fun configureRootfs(rootfsArch: String) {
         }
     }
 
-    // ─── Manual tar.gz extraction (no system binary dependency) ───────────────
+    // ─── DEB extraction (ar + tar.xz) ────────────────────────────────────────
+
+    private fun extractDeb(debFile: File, destDir: File, targetPaths: Set<String>) {
+        val arHeader = ByteArray(60)
+        FileInputStream(debFile).use { fis ->
+            // Skip ar magic
+            fis.readNBytes(8)
+
+            while (true) {
+                val bytesRead = fis.read(arHeader)
+                if (bytesRead < 60) break // EOF
+
+                val name = arHeader.copyOfRange(0, 16)
+                    .takeWhile { it != 0x20.toByte() && it != 0.toByte() }
+                    .toByteArray()
+                    .decodeToString()
+                val sizeStr = arHeader.copyOfRange(48, 58)
+                    .takeWhile { it != 0x20.toByte() && it != 0.toByte() }
+                    .toByteArray()
+                    .decodeToString()
+                    .trim()
+                val size = sizeStr.toLongOrNull() ?: 0L
+
+                if (name == "data.tar.xz" || name == "data.tar.gz" || name == "data.tar") {
+                    extractTarFromDeb(fis, destDir, targetPaths, size)
+                } else {
+                    fis.skip(size)
+                }
+
+                // Align to even boundary
+                if (size % 2 != 0) fis.skip(1)
+            }
+        }
+    }
+
+    private fun extractTarFromDeb(input: java.io.InputStream, destDir: File, targetPaths: Set<String>, dataSize: Long) {
+        val headerBuf = ByteArray(512)
+        val dataBuf = ByteArray(32768)
+        var pendingLongName: String? = null
+        var pendingLongLink: String? = null
+        var remaining = dataSize
+
+        while (remaining > 0) {
+            val read = readFully(input, headerBuf, minOf(512, remaining).toInt())
+            if (read < 512) break
+            remaining -= 512
+            if (headerBuf.all { it == 0.toByte() }) {
+                // Skip remaining padding blocks
+                break
+            }
+
+            val name = parseString(headerBuf, 0, 100)
+            val size = parseOctal(headerBuf, 124, 12)
+            val type = headerBuf[156].toInt().toChar()
+            val linkName = parseString(headerBuf, 157, 100)
+
+            if (type == 'L') {
+                pendingLongName = readStringData(input, size, dataBuf)
+                skipPadding(input, size)
+                remaining -= (512 + size + (512 - size % 512) % 512)
+                continue
+            }
+            if (type == 'K') {
+                pendingLongLink = readStringData(input, size, dataBuf)
+                skipPadding(input, size)
+                remaining -= (512 + size + (512 - size % 512) % 512)
+                continue
+            }
+
+            val finalName = pendingLongName ?: name
+            pendingLongName = null
+            val finalLink = pendingLongLink ?: linkName
+            pendingLongLink = null
+
+            if (type == '5') {
+                // Directory - skip
+                skipPadding(input, size)
+                remaining -= (512 + size + (512 - size % 512) % 512)
+            } else if (type == '2') {
+                // Symlink - skip
+                skipPadding(input, size)
+                remaining -= (512 + size + (512 - size % 512) % 512)
+            } else {
+                // Regular file - check if we need it
+                val needsExtract = targetPaths.contains(finalName)
+                val entry = File(destDir, finalName)
+
+                if (needsExtract) {
+                    entry.parentFile?.mkdirs()
+                    FileOutputStream(entry).use { out ->
+                        var left = size
+                        while (left > 0) {
+                            val toRead = minOf(dataBuf.size.toLong(), left).toInt()
+                            val read = readFully(input, dataBuf, toRead)
+                            if (read < 0) throw RuntimeException("Unexpected EOF in $finalName")
+                            out.write(dataBuf, 0, read)
+                            left -= read
+                        }
+                    }
+                    if (finalName.endsWith(".so") || finalName == "proot" || finalName == "loader") {
+                        entry.setExecutable(true, false)
+                    }
+                } else {
+                    // Skip file data
+                    var left = size
+                    val skipBuf = ByteArray(8192)
+                    while (left > 0) {
+                        val toSkip = minOf(skipBuf.size.toLong(), left).toInt()
+                        readFully(input, skipBuf, toSkip)
+                        left -= toSkip
+                    }
+                }
+                skipPadding(input, size)
+                remaining -= (512 + size + (512 - size % 512) % 512)
+            }
+        }
+    }
+
+    // ─── Manual tar.gz extraction (no system binary dependency) ──────────────
 
     private fun extractTarGz(tarGzFile: File, destDir: File) {
         var pendingLongName: String? = null
@@ -249,7 +402,6 @@ private fun configureRootfs(rootfsArch: String) {
             val toSkip = minOf(padding - skipped, 4096L)
             val n = input.skip(toSkip)
             if (n <= 0) {
-                // skip() may not skip the full amount; fallback to read
                 val buf = ByteArray(minOf(padding - skipped, 4096L).toInt())
                 readFully(input, buf, buf.size)
                 skipped += buf.size

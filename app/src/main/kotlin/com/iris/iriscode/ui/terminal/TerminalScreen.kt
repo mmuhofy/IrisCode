@@ -54,6 +54,8 @@ fun TerminalScreen(
     when (ubuntuSetupState) {
         is UbuntuSetupState.Checking, 
         is UbuntuSetupState.DownloadingProot, 
+        is UbuntuSetupState.DownloadingLibandroidShmem, 
+        is UbuntuSetupState.DownloadingLibtalloc, 
         is UbuntuSetupState.DownloadingRootfs, 
         is UbuntuSetupState.Extracting, 
         is UbuntuSetupState.Configuring -> {
@@ -62,6 +64,10 @@ fun TerminalScreen(
                     is UbuntuSetupState.Checking -> "Checking Ubuntu environment..."
                     is UbuntuSetupState.DownloadingProot -> 
                         "Downloading PRoot (${(ubuntuSetupState.progress * 100).toInt()}%)..."
+                    is UbuntuSetupState.DownloadingLibandroidShmem -> 
+                        "Downloading libandroid-shmem (${(ubuntuSetupState.progress * 100).toInt()}%)..."
+                    is UbuntuSetupState.DownloadingLibtalloc -> 
+                        "Downloading libtalloc (${(ubuntuSetupState.progress * 100).toInt()}%)..."
                     is UbuntuSetupState.DownloadingRootfs -> 
                         "Downloading Ubuntu rootfs (${(ubuntuSetupState.progress * 100).toInt()}%)..."
                     is UbuntuSetupState.Extracting -> "Extracting Ubuntu rootfs..."
