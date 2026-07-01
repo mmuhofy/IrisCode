@@ -77,6 +77,7 @@ fun TerminalScreen(
                         terminalManager.currentSession?.let { session ->
                             attachSession(session)
                         }
+                        terminalManager.registerTerminalView(this)
                     }
                 },
                 update = { view ->
@@ -85,6 +86,7 @@ fun TerminalScreen(
                             view.attachSession(session)
                         }
                     }
+                    terminalManager.registerTerminalView(view)
                     view.requestFocus()
                 }
             )

@@ -1,13 +1,28 @@
 package com.iris.iriscode.terminal
 
 import com.termux.terminal.TerminalSession
+import com.termux.view.TerminalView
 
 class TerminalManager(private val bootstrap: TermuxBootstrap) {
 
     var currentSession: TerminalSession? = null
         private set
 
-    private var sessionClient: TerminalSessionClientImpl = TerminalSessionClientImpl()
+    val sessionClient: TerminalSessionClientImpl = TerminalSessionClientImpl()
+
+    private var terminalViewRef: TerminalView? = null
+
+    fun registerTerminalView(view: TerminalView) {
+        terminalViewRef = view
+        sessionClient.onTextChanged = { session ->
+            view.onScreenUpdated()
+        }
+    }
+
+    fun unregisterTerminalView() {
+        sessionClient.onTextChanged = null
+        terminalViewRef = null
+    }
 
     fun createSession(): TerminalSession {
         val shellPath = bootstrap.shellPath

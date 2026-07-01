@@ -152,22 +152,24 @@ fun ChatScreen(
             )
         }
 
-        InputBar(
-            inputText = state.inputText,
-            isProcessing = state.isProcessing,
-            onTextChange = { text ->
-                viewModel.updateInput(text)
-                if (text.startsWith("/")) {
-                    viewModel.toggleSlashMenu(true)
-                    viewModel.updateSlashQuery(text.removePrefix("/"))
-                } else if (!text.startsWith("/") && state.showSlashMenu) {
-                    viewModel.toggleSlashMenu(false)
-                }
-            },
-            onSend = viewModel::sendMessage,
-            onToggleExpanded = viewModel::toggleOptionsSheet,
-            onSwipeLeft = { viewModel.toggleSlashMenu(true) }
-        )
+        if (state.selectedTab != ChatTab.Terminal) {
+            InputBar(
+                inputText = state.inputText,
+                isProcessing = state.isProcessing,
+                onTextChange = { text ->
+                    viewModel.updateInput(text)
+                    if (text.startsWith("/")) {
+                        viewModel.toggleSlashMenu(true)
+                        viewModel.updateSlashQuery(text.removePrefix("/"))
+                    } else if (!text.startsWith("/") && state.showSlashMenu) {
+                        viewModel.toggleSlashMenu(false)
+                    }
+                },
+                onSend = viewModel::sendMessage,
+                onToggleExpanded = viewModel::toggleOptionsSheet,
+                onSwipeLeft = { viewModel.toggleSlashMenu(true) }
+            )
+        }
     }
 
     if (state.showOptionsSheet) {

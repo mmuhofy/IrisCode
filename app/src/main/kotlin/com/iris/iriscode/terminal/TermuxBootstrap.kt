@@ -183,7 +183,10 @@ class TermuxBootstrap(private val context: Context) {
         env.add("TMPDIR=${File(context.filesDir, "termux/tmp").absolutePath}")
         env.add("SHELL=$shellPath")
         env.add("LD_LIBRARY_PATH=$prefixLib")
-        env.add("LD_PRELOAD=")
+        val termuxExec = File(prefixLib, "libtermux-exec.so")
+        if (termuxExec.exists()) {
+            env.add("LD_PRELOAD=${termuxExec.absolutePath}")
+        }
         env.add("PATH=${prefixDir.absolutePath}/bin:/system/bin")
         return env.toTypedArray()
     }
