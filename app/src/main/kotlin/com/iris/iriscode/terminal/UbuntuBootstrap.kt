@@ -171,6 +171,15 @@ class UbuntuBootstrap(private val context: Context) {
             alias la='ls -A'
             """.trimIndent() + "\n"
         )
+        // bash --login sources .bash_profile, not .bashrc directly
+        File(rootfsDir, "root/.bash_profile").writeText(
+            """
+            # Source .bashrc for interactive login shells
+            if [ -f ~/.bashrc ]; then
+                . ~/.bashrc
+            fi
+            """.trimIndent() + "\n"
+        )
     }
 
     fun retry() {

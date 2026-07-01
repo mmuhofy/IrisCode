@@ -22,6 +22,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.WindowInsets
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
 import com.iris.iriscode.terminal.UbuntuSetupState
@@ -37,6 +38,7 @@ fun TerminalScreen(
 ) {
     val fontSize = remember { mutableIntStateOf(12) }
     val terminalViewRef = remember { mutableStateOf<TerminalView?>(null) }
+    val imePadding = remember { mutableStateOf(0.dp) }
 
     val viewClient = remember {
         TerminalViewClientImpl { scale ->
@@ -48,6 +50,13 @@ fun TerminalScreen(
                 view.setTextSize(newSize)
             }
             newSize.toFloat() / base
+        }
+    }
+
+    // Observe IME insets to resize terminal when keyboard opens
+    LaunchedEffect(Unit) {
+        WindowInsets.current.ime.animate { it.bottom }.collect { bottom ->
+            imePadding.value = bottom.dp
         }
     }
 
@@ -98,7 +107,9 @@ fun TerminalScreen(
             }
 
             AndroidView(
-                modifier = modifier.focusRequester(focusRequester),
+                modifier = modifier
+                    .focusRequester(focusRequester)
+                    .padding(bottom = imePadding.value),
                 factory = { ctx ->
                     TerminalView(ctx, null).apply {
                         setTextSize(12)
