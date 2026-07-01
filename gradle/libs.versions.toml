@@ -86,3 +86,6 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+# Termux vendored module dependencies
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.7.1" }

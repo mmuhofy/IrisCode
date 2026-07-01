@@ -121,4 +121,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.documentfile)
+    
+    // Termux Terminal (vendored from github.com/termux/termux-app)
+    implementation(project(":termux:emulator"))
+    implementation(project(":termux:view"))
 }
