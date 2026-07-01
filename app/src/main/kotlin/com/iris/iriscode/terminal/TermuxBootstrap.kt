@@ -51,9 +51,27 @@ class TermuxBootstrap(private val context: Context) {
 
     private val client = OkHttpClient()
 
+    private val shebangDirs = setOf("/bin", "/libexec", "/lib/apt/methods", "/lib/apt")
+
     suspend fun install(onState: (BootstrapState) -> Unit) {
         onState(BootstrapState.Checking)
+        if (isInstalled) {
+            withContext(Dispatchers.IO) {
+                fixShebangs()
+            }
+            onState(BootstrapState.AlreadyInstalled)
+            return
+        }
         runInstall(onState)
+    }
+
+    private fun fixShebangs() {
+        val actualPrefix = prefixDir.absolutePath
+        prefixDir.walkTopDown().forEach { file ->
+            if (file.isFile && shebangDirs.any { file.parent?.endsWith(it) == true }) {
+                fixShebang(file, actualPrefix)
+            }
+        }
     }
 
     fun retry() {
@@ -156,19 +174,15 @@ class TermuxBootstrap(private val context: Context) {
                     stagingDir.deleteRecursively()
                 }
 
-                val actualPrefix = prefixDir.absolutePath
                 prefixDir.walkTopDown().forEach { file ->
-                    if (file.isFile) {
-                        if (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
-                            file.parent?.endsWith("/libexec") == true
-                        ) {
-                            file.setExecutable(true, false)
-                        }
-                        if (file.parent?.endsWith("/bin") == true || file.parent?.endsWith("/libexec") == true) {
-                            fixShebang(file, actualPrefix)
-                        }
+                    if (file.isFile && (file.name == "bash" || file.parent?.endsWith("/bin") == true ||
+                        file.parent?.endsWith("/libexec") == true)
+                    ) {
+                        file.setExecutable(true, false)
                     }
                 }
+
+                fixShebangs()
 
                 onState(BootstrapState.Completed)
             }
