@@ -77,14 +77,13 @@ fun ChatScreen(
             onMoreDismiss = viewModel::dismissMoreMenu
         )
 
-        Box(
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .background(IrisBackground)
         ) {
-            // Tab bar inside the rounded content area
             PillTabs(
                 selectedTab = state.selectedTab,
                 onTabSelect = viewModel::setTab
@@ -92,7 +91,7 @@ fun ChatScreen(
 
             when (state.selectedTab) {
                 ChatTab.Terminal -> {
-                    TerminalScreen(modifier = Modifier.fillMaxSize())
+                    TerminalScreen(modifier = Modifier.weight(1f).fillMaxWidth())
                 }
                 ChatTab.Files -> {
                     FilesTab()
