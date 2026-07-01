@@ -123,6 +123,11 @@ class UbuntuBootstrap(private val context: Context) {
             """.trimIndent() + "\n"
         )
         File(rootfsDir, "root").mkdirs()
+        File(rootfsDir, "root").setWritable(true, false)
+        File(rootfsDir, "root").setReadable(true, false)
+        File(rootfsDir, "root").setExecutable(true, false)
+        File(rootfsDir, "tmp").mkdirs()
+        File(rootfsDir, "tmp").setWritable(true, false)
         File(rootfsDir, "root/.bashrc").writeText(
             """
             export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

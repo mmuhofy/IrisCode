@@ -47,6 +47,7 @@ class ProotRunner(
             add("LANG=C.UTF-8")
             add("SHELL=/bin/bash")
             add("TMPDIR=/tmp")
+            add("PROOT_TMP_DIR=/tmp")
             try {
                 val systemEnv = System.getenv()
                 for ((key, value) in systemEnv) {
