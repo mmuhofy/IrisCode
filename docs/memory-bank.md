@@ -473,17 +473,29 @@ Priority: project rules > global rules
 
 ## Current Status (2026-07-01)
 
-### Terminal Bootstrap
+### Terminal Bootstrap — PRoot-based Ubuntu Shell (NEW)
+- **Strategy change**: Replaced Termux-first approach with PRoot + Ubuntu 24.04 rootfs
+- **Why**: `com.iris.iriscode` (17 chars) > `com.termux` (10 chars). Our writable paths are 7+ chars longer, making same-length ELF patching structurally impossible.
+- Static PRoot v5.2.0 (~1.5MB) downloaded from `proot-me/proot` releases at runtime
+- Ubuntu 24.04 base rootfs (~28MB gz, ~150MB extracted) downloaded from `cdimage.ubuntu.com`
+- Manual tar.gz parser implemented (no system binary dependency) — handles GNU long names, symlinks, permissions
+- [OK] `UbuntuSetupState.kt` — sealed class for download/extract progress
+- [OK] `UbuntuBootstrap.kt` — download PRoot + rootfs, extract, configure (resolv.conf, apt sources, bashrc)
+- [OK] `ProotRunner.kt` — build PRoot command: `-0 -r rootfs -b system,vendor,dev,proc,sys,sdcard -w /root /bin/bash --login`
+- [OK] `TerminalManager.kt` — updated to prefer PRoot shell, fall back to Termux
+- [OK] `ChatViewModel.kt` — Ubuntu bootstrap runs alongside Termux bootstrap as primary shell
+
+### Terminal Bootstrap — Termux (fallback)
 - [OK] Vendored termux emulator + view modules
 - [OK] Pre-built libtermux.so in jniLibs
 - [OK] `TermuxBootstrap.kt` downloads bootstrap from GitHub releases
-- [FIXED] Improved exception handling: added `Log.e` with full stack trace + exception class name in Failed message
-- [FIXED] Added required `User-Agent` header to GitHub API requests
+- [OK] Text-only `fixTermuxPrefix()` handled for shebangs/scripts (ELF skipped)
 
 ### Known Issues
-- Bootstrap `Permission denied` — root cause: **Android W^X (Write XOR Execute) restriction** on API 29+. Files in app data dir cannot be executed via `execve()` for apps targeting SDK >= 29.
-- **Fix**: lowered `targetSdkVersion` from 34 → 28 (Termux app approach). This disables W^X enforcement at the framework level.
-- Need to test end-to-end on actual Android device
+- **PRoot needs ptrace**: Android `untrusted_app` SELinux context may block ptrace. targetSdk=28 may help but not guaranteed. Must be tested on device.
+- Static PRoot binary uses glibc syscall interface — needs testing on Bionic-based Android.
+- Bootstrap zip extraction: long symlink chains may hit Android's `MAX_SYMLINKS=40`. Not hit yet.
+- Ubuntu rootfs URL: `http://` (not `https://`) — `cdimage.ubuntu.com` only serves HTTP. Must verify OkHttp follows redirects correctly. `followRedirects(true)` is set.
 
 ## Open Decisions
 - App icon: "I" + cursor concept, final design TBD

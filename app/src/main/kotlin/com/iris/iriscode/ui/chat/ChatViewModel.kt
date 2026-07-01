@@ -16,6 +16,8 @@ import com.iris.iriscode.domain.model.WorkMode
 import com.iris.iriscode.terminal.BootstrapState
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TermuxBootstrap
+import com.iris.iriscode.terminal.UbuntuBootstrap
+import com.iris.iriscode.terminal.UbuntuSetupState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +47,7 @@ data class ChatUiState(
     val isProcessing: Boolean = false,
     val isTyping: Boolean = false,
     val bootstrapState: BootstrapState = BootstrapState.Checking,
+    val ubuntuSetupState: UbuntuSetupState = UbuntuSetupState.Checking,
     val workMode: WorkMode = WorkMode.DEFAULT,
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
@@ -72,11 +75,17 @@ class ChatViewModel @Inject constructor(
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     private val termuxBootstrap = TermuxBootstrap(application)
-    val terminalManager = TerminalManager(termuxBootstrap)
+    private val ubuntuBootstrap = UbuntuBootstrap(application)
+    val terminalManager = TerminalManager(termuxBootstrap, ubuntuBootstrap)
 
     private val geminiStepHistory = mutableListOf<GeminiStep>()
 
     init {
+        viewModelScope.launch {
+            ubuntuBootstrap.install { state ->
+                _state.value = _state.value.copy(ubuntuSetupState = state)
+            }
+        }
         viewModelScope.launch {
             termuxBootstrap.install { state ->
                 _state.value = _state.value.copy(bootstrapState = state)
@@ -342,10 +351,6 @@ class ChatViewModel @Inject constructor(
         )
     }
 
-    /**
-     * Remove the pending agent text message if it has no content.
-     * Called before inserting a tool card so we don't show an empty bubble.
-     */
     private fun removeVoidAgentText(msgId: String?, builder: StringBuilder) {
         if (msgId != null && builder.isEmpty()) {
             removeMessage(msgId)
@@ -461,6 +466,16 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             termuxBootstrap.install { state ->
                 _state.value = _state.value.copy(bootstrapState = state)
+            }
+        }
+    }
+
+    fun retryUbuntuSetup() {
+        ubuntuBootstrap.retry()
+        _state.value = _state.value.copy(ubuntuSetupState = UbuntuSetupState.Checking)
+        viewModelScope.launch {
+            ubuntuBootstrap.install { state ->
+                _state.value = _state.value.copy(ubuntuSetupState = state)
             }
         }
     }

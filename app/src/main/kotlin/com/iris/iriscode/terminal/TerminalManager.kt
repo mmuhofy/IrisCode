@@ -3,14 +3,18 @@ package com.iris.iriscode.terminal
 import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalView
 
-class TerminalManager(private val bootstrap: TermuxBootstrap) {
-
+class TerminalManager(
+    private val termuxBootstrap: TermuxBootstrap,
+    private val ubuntuBootstrap: UbuntuBootstrap
+) {
     var currentSession: TerminalSession? = null
         private set
 
     val sessionClient: TerminalSessionClientImpl = TerminalSessionClientImpl()
 
     private var terminalViewRef: TerminalView? = null
+
+    private val prootRunner: ProotRunner by lazy { ProotRunner(ubuntuBootstrap) }
 
     fun registerTerminalView(view: TerminalView) {
         terminalViewRef = view
@@ -25,9 +29,23 @@ class TerminalManager(private val bootstrap: TermuxBootstrap) {
     }
 
     fun createSession(): TerminalSession {
-        val shellPath = bootstrap.shellPath
-        val cwd = bootstrap.defaultCwd
-        val env = bootstrap.buildEnv()
+        if (ubuntuBootstrap.isInstalled) {
+            val cmd = prootRunner.build()
+            val session = TerminalSession(
+                cmd.executable,
+                cmd.cwd,
+                cmd.argv.toTypedArray(),
+                cmd.environment.toTypedArray(),
+                3000,
+                sessionClient
+            )
+            currentSession = session
+            return session
+        }
+
+        val shellPath = termuxBootstrap.shellPath
+        val cwd = termuxBootstrap.defaultCwd
+        val env = termuxBootstrap.buildEnv()
 
         val session = TerminalSession(
             shellPath,
