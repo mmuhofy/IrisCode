@@ -170,7 +170,7 @@ class UbuntuBootstrap(private val context: Context) {
 
         GZIPInputStream(FileInputStream(tarGzFile)).use { gz ->
             while (true) {
-                if (!readFully(gz, headerBuf)) return
+                if (readFully(gz, headerBuf) < 0) return
                 if (headerBuf.all { it == 0.toByte() }) return
 
                 val name = parseString(headerBuf, 0, 100)
