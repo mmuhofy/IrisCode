@@ -176,12 +176,15 @@ class TermuxBootstrap(private val context: Context) {
                 env.add("$key=$value")
             }
         } catch (_: Exception) {}
+        val prefixLib = "${prefixDir.absolutePath}/lib"
         env.add("TERM=xterm-256color")
         env.add("HOME=${homeDir.absolutePath}")
         env.add("PREFIX=${prefixDir.absolutePath}")
         env.add("TMPDIR=${File(context.filesDir, "termux/tmp").absolutePath}")
         env.add("SHELL=$shellPath")
+        env.add("LD_LIBRARY_PATH=$prefixLib")
         env.add("LD_PRELOAD=")
+        env.add("PATH=${prefixDir.absolutePath}/bin:/system/bin")
         return env.toTypedArray()
     }
 }
