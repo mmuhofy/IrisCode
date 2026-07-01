@@ -18,6 +18,9 @@ class ProotRunner(
     )
 
     fun build(): ProotCommand {
+        File(tmpPath).mkdirs()
+        File(homePath).mkdirs()
+
         val binds = mutableListOf<String>().apply {
             add("-b"); add("/system:/system")
             add("-b"); add("/vendor:/vendor")
@@ -32,7 +35,7 @@ class ProotRunner(
 
         val argv = mutableListOf<String>().apply {
             add(prootPath)
-            add("-0")
+            add("--link2symlink")
             add("-r"); add(rootfsPath)
             addAll(binds)
             add("-w"); add("/root")
@@ -47,7 +50,7 @@ class ProotRunner(
             add("LANG=C.UTF-8")
             add("SHELL=/bin/bash")
             add("TMPDIR=/tmp")
-            add("PROOT_TMP_DIR=/tmp")
+            add("PROOT_TMP_DIR=$tmpPath")
             try {
                 val systemEnv = System.getenv()
                 for ((key, value) in systemEnv) {

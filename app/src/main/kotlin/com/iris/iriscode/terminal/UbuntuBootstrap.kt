@@ -105,7 +105,7 @@ class UbuntuBootstrap(private val context: Context) {
         }
     }
 
-    private fun configureRootfs(rootfsArch: String) {
+private fun configureRootfs(rootfsArch: String) {
         val mirror = if (rootfsArch == "amd64") "archive.ubuntu.com/ubuntu" else "ports.ubuntu.com/ubuntu-ports"
 
         File(rootfsDir, "etc/resolv.conf").writeText(
@@ -122,14 +122,20 @@ class UbuntuBootstrap(private val context: Context) {
             deb http://$mirror noble-security main restricted universe multiverse
             """.trimIndent() + "\n"
         )
-
-        // Ensure critical directories exist in rootfs
-        listOf("root", "tmp", "dev", "proc", "sys", "run").forEach { name ->
-            File(rootfsDir, name).mkdirs()
-            File(rootfsDir, name).setWritable(true, false)
-            File(rootfsDir, name).setReadable(true, false)
-            File(rootfsDir, name).setExecutable(true, false)
-        }
+        File(rootfsDir, "root").mkdirs()
+        File(rootfsDir, "tmp").mkdirs()
+        File(rootfsDir, "root/.bashrc").writeText(
+            """
+            export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            export HOME=/root
+            export TERM=xterm-256color
+            export LANG=C.UTF-8
+            PS1='\[\033[01;35m\]\u@iriscode\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+            alias ll='ls -la'
+            alias la='ls -A'
+            """.trimIndent() + "\n"
+        )
+    }
 
         File(rootfsDir, "root/.bashrc").writeText(
             """
