@@ -1,5 +1,5 @@
 # Iris Code — Memory Bank
-_Last updated: 2026-06-29_
+_Last updated: 2026-07-01_
 
 ---
 
@@ -470,6 +470,19 @@ Priority: project rules > global rules
 | Diff | `java-diff-utils`, `git diff` |
 
 ---
+
+## Current Status (2026-07-01)
+
+### Terminal Bootstrap
+- [OK] Vendored termux emulator + view modules
+- [OK] Pre-built libtermux.so in jniLibs
+- [OK] `TermuxBootstrap.kt` downloads bootstrap from GitHub releases
+- [FIXED] Improved exception handling: added `Log.e` with full stack trace + exception class name in Failed message
+- [FIXED] Added required `User-Agent` header to GitHub API requests
+
+### Known Issues
+- Bootstrap download may fail on first launch if GitHub API rate-limits (429) — now properly logged with status code
+- Need to test end-to-end on actual Android device
 
 ## Open Decisions
 - App icon: "I" + cursor concept, final design TBD

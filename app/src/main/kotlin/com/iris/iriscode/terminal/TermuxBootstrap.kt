@@ -3,6 +3,7 @@ package com.iris.iriscode.terminal
 import android.content.Context
 import android.os.Build
 import android.system.Os
+import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -57,7 +58,11 @@ class TermuxBootstrap(private val context: Context) {
                 ?: throw RuntimeException("Unsupported architecture: ${Build.SUPPORTED_ABIS[0]}")
 
             val releaseUrl = "https://api.github.com/repos/termux/termux-packages/releases?per_page=1"
-            val releaseRequest = Request.Builder().url(releaseUrl).addHeader("Accept", "application/json").build()
+            val releaseRequest = Request.Builder()
+                .url(releaseUrl)
+                .addHeader("Accept", "application/json")
+                .addHeader("User-Agent", "IrisCode/1.0")
+                .build()
             val releaseResponse = client.newCall(releaseRequest).execute()
             if (!releaseResponse.isSuccessful) throw RuntimeException("Failed to fetch latest release")
             val releaseBody = releaseResponse.body!!.string()
@@ -138,7 +143,8 @@ class TermuxBootstrap(private val context: Context) {
 
             onState(BootstrapState.Completed)
         } catch (e: Exception) {
-            onState(BootstrapState.Failed(e.message ?: "Unknown error"))
+            Log.e("TermuxBootstrap", "Bootstrap failed", e)
+            onState(BootstrapState.Failed("${e::class.simpleName}: ${e.message ?: "Unknown error"}"))
         }
     }
 
