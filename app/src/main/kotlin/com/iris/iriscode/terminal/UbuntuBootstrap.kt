@@ -83,7 +83,7 @@ class UbuntuBootstrap(private val context: Context) {
 
                 // UNTESTED — verify before use
                 val rootfsUrl =
-                    "http://cdimage.ubuntu.com/ubuntu-base/releases/$UBUNTU_VERSION/release/ubuntu-base-$UBUNTU_VERSION-base-$rootfsArch.tar.gz"
+                    "https://cdimage.ubuntu.com/ubuntu-base/releases/$UBUNTU_VERSION/release/ubuntu-base-$UBUNTU_VERSION-base-$rootfsArch.tar.gz"
                 val rootfsTmp = File(tmpDir, "ubuntu-base.tar.gz")
                 downloadFile(rootfsUrl, rootfsTmp) { progress ->
                     onState(UbuntuSetupState.DownloadingRootfs(progress))
