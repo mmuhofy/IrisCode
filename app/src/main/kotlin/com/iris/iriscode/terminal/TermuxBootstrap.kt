@@ -51,13 +51,11 @@ class TermuxBootstrap(private val context: Context) {
 
     private val client = OkHttpClient()
 
-    private val shebangDirs = setOf("/bin", "/libexec", "/lib/apt/methods", "/lib/apt")
-
     suspend fun install(onState: (BootstrapState) -> Unit) {
         onState(BootstrapState.Checking)
         if (isInstalled) {
             withContext(Dispatchers.IO) {
-                fixShebangs()
+                fixTermuxPrefix()
             }
             onState(BootstrapState.AlreadyInstalled)
             return
@@ -65,12 +63,21 @@ class TermuxBootstrap(private val context: Context) {
         runInstall(onState)
     }
 
-    private fun fixShebangs() {
+    private fun fixTermuxPrefix() {
         val actualPrefix = prefixDir.absolutePath
         prefixDir.walkTopDown().forEach { file ->
-            if (file.isFile && shebangDirs.any { file.parent?.endsWith(it) == true }) {
-                fixShebang(file, actualPrefix)
-            }
+            if (!file.isFile) return@forEach
+            try {
+                val bytes = file.readBytes()
+                if (bytes.size < 4) return@forEach
+                // Skip ELF binaries — termux-exec LD_PRELOAD handles those at runtime
+                if (bytes[0] == 0x7f.toByte() && bytes[1] == 'E'.code.toByte() &&
+                    bytes[2] == 'L'.code.toByte() && bytes[3] == 'F'.code.toByte()
+                ) return@forEach
+                if (!bytes.decodeToString().contains(TERMUX_PREFIX)) return@forEach
+                val fixed = bytes.decodeToString().replace(TERMUX_PREFIX, actualPrefix)
+                file.writeBytes(fixed.encodeToByteArray())
+            } catch (_: Exception) {}
         }
     }
 
@@ -182,7 +189,7 @@ class TermuxBootstrap(private val context: Context) {
                     }
                 }
 
-                fixShebangs()
+                fixTermuxPrefix()
 
                 onState(BootstrapState.Completed)
             }
@@ -190,21 +197,6 @@ class TermuxBootstrap(private val context: Context) {
             Log.e("TermuxBootstrap", "Bootstrap failed", e)
             onState(BootstrapState.Failed("${e::class.simpleName}: ${e.message ?: "Unknown error"}"))
         }
-    }
-
-    private fun fixShebang(file: File, actualPrefix: String) {
-        try {
-            val bytes = file.readBytes()
-            if (bytes.size < 2 || bytes[0] != '#'.code.toByte() || bytes[1] != '!'.code.toByte()) return
-            val firstLineEnd = bytes.indexOf('\n'.code.toByte())
-            if (firstLineEnd == -1) return
-            val shebang = bytes.decodeToString(0, firstLineEnd)
-            if (shebang.contains(TERMUX_PREFIX)) {
-                val fixed = shebang.replace(TERMUX_PREFIX, actualPrefix)
-                val newBytes = fixed.encodeToByteArray() + bytes.copyOfRange(firstLineEnd, bytes.size)
-                file.writeBytes(newBytes)
-            }
-        } catch (_: Exception) {}
     }
 
     fun buildEnv(): Array<String> {
