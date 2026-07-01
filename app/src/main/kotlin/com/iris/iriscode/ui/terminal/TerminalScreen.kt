@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,15 +35,16 @@ fun TerminalScreen(
     bootstrapState: BootstrapState,
     onRetry: () -> Unit = {}
 ) {
+    val fontSize = remember { mutableIntStateOf(12) }
     val terminalViewRef = remember { mutableStateOf<TerminalView?>(null) }
 
     val viewClient = remember {
         TerminalViewClientImpl { scale ->
             val view = terminalViewRef.value ?: return@TerminalViewClientImpl 1.0f
-            val renderer = view.mRenderer ?: return@TerminalViewClientImpl 1.0f
-            val base = renderer.mTextSize
+            val base = fontSize.intValue
             val newSize = (base * scale).roundToInt().coerceIn(6, 30)
             if (newSize != base) {
+                fontSize.intValue = newSize
                 view.setTextSize(newSize)
             }
             newSize.toFloat() / base
