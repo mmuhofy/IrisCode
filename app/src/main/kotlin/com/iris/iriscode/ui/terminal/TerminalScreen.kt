@@ -12,8 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -51,18 +54,26 @@ fun TerminalScreen(
         }
 
         is BootstrapState.Completed, is BootstrapState.AlreadyInstalled -> {
+            val focusRequester = remember { FocusRequester() }
+
             LaunchedEffect(Unit) {
                 if (terminalManager.currentSession == null) {
                     terminalManager.createSession()
                 }
             }
 
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
             AndroidView(
-                modifier = modifier,
+                modifier = modifier.focusRequester(focusRequester),
                 factory = { ctx ->
                     TerminalView(ctx, null).apply {
                         setTextSize(12)
                         setTerminalViewClient(viewClient)
+                        isFocusable = true
+                        isFocusableInTouchMode = true
                         terminalManager.currentSession?.let { session ->
                             attachSession(session)
                         }
@@ -74,6 +85,7 @@ fun TerminalScreen(
                             view.attachSession(session)
                         }
                     }
+                    view.requestFocus()
                 }
             )
         }
