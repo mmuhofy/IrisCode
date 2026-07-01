@@ -12,9 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -22,7 +24,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.WindowInsets
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
 import com.iris.iriscode.terminal.UbuntuSetupState
@@ -50,13 +51,6 @@ fun TerminalScreen(
                 view.setTextSize(newSize)
             }
             newSize.toFloat() / base
-        }
-    }
-
-    // Observe IME insets to resize terminal when keyboard opens
-    LaunchedEffect(Unit) {
-        WindowInsets.current.ime.animate { it.bottom }.collect { bottom ->
-            imePadding.value = bottom.dp
         }
     }
 
