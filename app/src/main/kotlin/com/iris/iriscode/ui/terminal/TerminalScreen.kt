@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -24,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.WindowInsets
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
 import com.iris.iriscode.terminal.UbuntuSetupState
@@ -51,6 +53,14 @@ fun TerminalScreen(
                 view.setTextSize(newSize)
             }
             newSize.toFloat() / base
+        }
+    }
+
+    // Observe IME insets to resize terminal when keyboard opens
+    val windowInsets = WindowInsets.current
+    LaunchedEffect(windowInsets.ime) {
+        snapshotFlow { windowInsets.ime.bottom }.collect { bottom ->
+            imePadding.value = bottom.dp
         }
     }
 

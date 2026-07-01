@@ -166,7 +166,7 @@ class UbuntuBootstrap(private val context: Context) {
             export PROOT_TMP_DIR=/tmp
             export TMPDIR=/tmp
             export TEMP=/tmp
-            PS1='\[\033[01;35m\]\u@iriscode\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+            PS1='\[\033[01;32m\]\u@iriscode\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
             alias ll='ls -la'
             alias la='ls -A'
             """.trimIndent() + "\n"
