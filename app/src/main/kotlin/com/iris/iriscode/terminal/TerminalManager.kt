@@ -1,8 +1,6 @@
 package com.iris.iriscode.terminal
 
-import android.util.Log
 import com.termux.terminal.TerminalSession
-import java.io.File
 
 class TerminalManager {
 
@@ -16,8 +14,6 @@ class TerminalManager {
     ): TerminalSession {
         val shellPath = detectShell()
         val env = buildEnv()
-
-        Log.i("TerminalManager", "Starting shell: $shellPath, cwd: $cwd")
 
         val session = TerminalSession(
             shellPath,
@@ -48,14 +44,7 @@ class TerminalManager {
 
     companion object {
         fun detectShell(): String {
-            val termuxBash = "/data/data/com.termux/files/usr/bin/bash"
-            if (File(termuxBash).exists()) {
-                Log.i("TerminalManager", "Using Termux bash: $termuxBash")
-                return termuxBash
-            }
-            val systemSh = "/system/bin/sh"
-            Log.i("TerminalManager", "Termux not found, using system shell: $systemSh")
-            return systemSh
+            return "/data/data/com.termux/files/usr/bin/bash"
         }
 
         fun buildEnv(): Array<String> {

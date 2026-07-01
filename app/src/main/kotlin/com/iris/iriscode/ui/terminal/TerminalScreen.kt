@@ -25,6 +25,7 @@ fun TerminalScreen(
         modifier = modifier,
         factory = { ctx ->
             TerminalView(ctx, null).apply {
+                setTextSize(12)
                 setTerminalViewClient(viewClient)
                 terminalManager.currentSession?.let { session ->
                     attachSession(session)
