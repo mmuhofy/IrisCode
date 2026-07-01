@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Build
 import android.system.Os
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -54,6 +56,7 @@ class TermuxBootstrap(private val context: Context) {
         onState(BootstrapState.Checking)
 
         try {
+            withContext(Dispatchers.IO) {
             val arch = archMap[Build.SUPPORTED_ABIS[0]]
                 ?: throw RuntimeException("Unsupported architecture: ${Build.SUPPORTED_ABIS[0]}")
 
@@ -142,6 +145,7 @@ class TermuxBootstrap(private val context: Context) {
             }
 
             onState(BootstrapState.Completed)
+            }
         } catch (e: Exception) {
             Log.e("TermuxBootstrap", "Bootstrap failed", e)
             onState(BootstrapState.Failed("${e::class.simpleName}: ${e.message ?: "Unknown error"}"))
