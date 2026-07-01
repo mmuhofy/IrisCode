@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.iris.iriscode"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 28
         versionCode = project.property("VERSION_CODE").toString().toInt()
         versionName = "${project.property("VERSION_MAJOR")}.${project.property("VERSION_MINOR")}.${project.property("VERSION_PATCH")}"
     }

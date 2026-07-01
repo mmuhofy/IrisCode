@@ -481,7 +481,8 @@ Priority: project rules > global rules
 - [FIXED] Added required `User-Agent` header to GitHub API requests
 
 ### Known Issues
-- Bootstrap `Permission denied` — fixed: `setExecutable(true, false)` (owner+group+other), plus post-extraction walk hardening all bin/ files
+- Bootstrap `Permission denied` — root cause: **Android W^X (Write XOR Execute) restriction** on API 29+. Files in app data dir cannot be executed via `execve()` for apps targeting SDK >= 29.
+- **Fix**: lowered `targetSdkVersion` from 34 → 28 (Termux app approach). This disables W^X enforcement at the framework level.
 - Need to test end-to-end on actual Android device
 
 ## Open Decisions
