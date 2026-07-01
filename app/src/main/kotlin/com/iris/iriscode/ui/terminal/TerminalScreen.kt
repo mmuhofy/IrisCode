@@ -24,9 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.ime
-import androidx.compose.ui.window.navigationBars
-import androidx.compose.ui.window.statusBars
+import androidx.compose.ui.window.WindowInsets
 import androidx.compose.ui.window.windowInsetsPadding
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
@@ -106,9 +104,9 @@ fun TerminalScreen(
             AndroidView(
                 modifier = modifier
                     .focusRequester(focusRequester)
-                    .windowInsetsPadding(ime())
-                    .windowInsetsPadding(statusBars())
-                    .windowInsetsPadding(navigationBars()),
+                    .windowInsetsPadding(WindowInsets.current.ime)
+                    .windowInsetsPadding(WindowInsets.current.statusBars)
+                    .windowInsetsPadding(WindowInsets.current.navigationBars),
                 factory = { ctx ->
                     TerminalView(ctx, null).apply {
                         setTextSize(12)
