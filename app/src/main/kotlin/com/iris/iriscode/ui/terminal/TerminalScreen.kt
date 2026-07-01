@@ -1,15 +1,8 @@
 package com.iris.iriscode.ui.terminal
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.iris.iriscode.terminal.TerminalManager
 import com.iris.iriscode.terminal.TerminalViewClientImpl
@@ -18,15 +11,13 @@ import com.termux.view.TerminalView
 @Composable
 fun TerminalScreen(
     modifier: Modifier = Modifier,
-    terminalManager: TerminalManager = remember { TerminalManager() }
+    terminalManager: TerminalManager
 ) {
-    val context = LocalContext.current
-    val viewClient = remember { TerminalViewClientImpl() }
+    val viewClient = TerminalViewClientImpl()
 
-    DisposableEffect(Unit) {
-        val session = terminalManager.createSession()
-        onDispose {
-            terminalManager.destroy()
+    LaunchedEffect(Unit) {
+        if (terminalManager.currentSession == null) {
+            terminalManager.createSession()
         }
     }
 
@@ -35,12 +26,18 @@ fun TerminalScreen(
         factory = { ctx ->
             TerminalView(ctx, null).apply {
                 setTerminalViewClient(viewClient)
+                terminalManager.currentSession?.let { session ->
+                    attachSession(session)
+                }
             }
         },
         update = { view ->
             terminalManager.currentSession?.let { session ->
                 if (view.mTermSession != session) {
                     view.attachSession(session)
+                }
+                if (view.isAttachedToWindow) {
+                    view.updateSize()
                 }
             }
         }

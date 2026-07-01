@@ -91,7 +91,10 @@ fun ChatScreen(
         ) {
             when (state.selectedTab) {
                 ChatTab.Terminal -> {
-                    TerminalScreen(modifier = Modifier.fillMaxSize())
+                    TerminalScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        terminalManager = viewModel.terminalManager
+                    )
                 }
                 ChatTab.Files -> {
                     FilesTab()

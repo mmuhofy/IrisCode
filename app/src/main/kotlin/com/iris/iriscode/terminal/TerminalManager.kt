@@ -1,7 +1,8 @@
 package com.iris.iriscode.terminal
 
+import android.util.Log
 import com.termux.terminal.TerminalSession
-import java.util.UUID
+import java.io.File
 
 class TerminalManager {
 
@@ -11,14 +12,17 @@ class TerminalManager {
     private var sessionClient: TerminalSessionClientImpl = TerminalSessionClientImpl()
 
     fun createSession(
-        shellPath: String = "/data/data/com.termux/files/usr/bin/bash",
         cwd: String = "/data/data/com.termux/files/home",
-        env: Array<String> = defaultEnv(),
     ): TerminalSession {
+        val shellPath = detectShell()
+        val env = buildEnv()
+
+        Log.i("TerminalManager", "Starting shell: $shellPath, cwd: $cwd")
+
         val session = TerminalSession(
             shellPath,
             cwd,
-            arrayOf(shellPath, "-l"),
+            arrayOf(shellPath),
             env,
             3000,
             sessionClient
@@ -43,18 +47,27 @@ class TerminalManager {
     }
 
     companion object {
-        fun defaultEnv(): Array<String> {
-            return arrayOf(
-                "TERM=xterm-256color",
-                "HOME=/data/data/com.termux/files/home",
-                "SHELL=/data/data/com.termux/files/usr/bin/bash",
-                "USER=" + System.getProperty("user.name", "u0_a"),
-                "PATH=/data/data/com.termux/files/usr/bin:/data/data/com.termux/files/usr/bin/applets:/system/bin:/system/xbin",
-                "LANG=en_US.UTF-8",
-                "TMPDIR=/data/data/com.termux/files/usr/tmp",
-                "PREFIX=/data/data/com.termux/files/usr",
-                "LD_PRELOAD=",
-            )
+        fun detectShell(): String {
+            val termuxBash = "/data/data/com.termux/files/usr/bin/bash"
+            if (File(termuxBash).exists()) {
+                Log.i("TerminalManager", "Using Termux bash: $termuxBash")
+                return termuxBash
+            }
+            val systemSh = "/system/bin/sh"
+            Log.i("TerminalManager", "Termux not found, using system shell: $systemSh")
+            return systemSh
+        }
+
+        fun buildEnv(): Array<String> {
+            val env = mutableListOf<String>()
+            try {
+                val systemEnv = System.getenv()
+                for ((key, value) in systemEnv) {
+                    env.add("$key=$value")
+                }
+            } catch (_: Exception) {}
+            env.add("TERM=xterm-256color")
+            return env.toTypedArray()
         }
     }
 }

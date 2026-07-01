@@ -12,6 +12,7 @@ import com.iris.iriscode.domain.agent.AgentEvent
 import com.iris.iriscode.domain.agent.ToolResult
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.domain.model.WorkMode
+import com.iris.iriscode.terminal.TerminalManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,6 +65,8 @@ class ChatViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
+
+    val terminalManager = TerminalManager()
 
     private val geminiStepHistory = mutableListOf<GeminiStep>()
 
@@ -436,6 +439,11 @@ class ChatViewModel @Inject constructor(
 
     fun setEffortLevel(level: String) {
         _state.value = _state.value.copy(effortLevel = level)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        terminalManager.destroy()
     }
 
     private fun clearChat() {
