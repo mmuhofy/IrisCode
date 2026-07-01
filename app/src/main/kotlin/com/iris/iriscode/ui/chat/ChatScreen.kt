@@ -35,6 +35,7 @@ import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.components.FilesTab
 import com.iris.iriscode.ui.chat.components.MessageBubble
 import com.iris.iriscode.ui.chat.components.SlashMenu
+import com.iris.iriscode.ui.terminal.TerminalScreen
 import com.iris.iriscode.ui.theme.*
 
 @Composable
@@ -91,25 +92,7 @@ fun ChatScreen(
 
             when (state.selectedTab) {
                 ChatTab.Terminal -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Lucide.SquareTerminal,
-                                contentDescription = null,
-                                tint = IrisTextSecondary,
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Terminal ready",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = IrisTextSecondary
-                            )
-                        }
-                    }
+                    TerminalScreen(modifier = Modifier.fillMaxSize())
                 }
                 ChatTab.Files -> {
                     FilesTab()
