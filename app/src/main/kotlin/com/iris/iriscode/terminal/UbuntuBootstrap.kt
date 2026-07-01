@@ -122,18 +122,24 @@ class UbuntuBootstrap(private val context: Context) {
             deb http://$mirror noble-security main restricted universe multiverse
             """.trimIndent() + "\n"
         )
-        File(rootfsDir, "root").mkdirs()
-        File(rootfsDir, "root").setWritable(true, false)
-        File(rootfsDir, "root").setReadable(true, false)
-        File(rootfsDir, "root").setExecutable(true, false)
-        File(rootfsDir, "tmp").mkdirs()
-        File(rootfsDir, "tmp").setWritable(true, false)
+
+        // Ensure critical directories exist in rootfs
+        listOf("root", "tmp", "dev", "proc", "sys", "run").forEach { name ->
+            File(rootfsDir, name).mkdirs()
+            File(rootfsDir, name).setWritable(true, false)
+            File(rootfsDir, name).setReadable(true, false)
+            File(rootfsDir, name).setExecutable(true, false)
+        }
+
         File(rootfsDir, "root/.bashrc").writeText(
             """
             export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
             export HOME=/root
             export TERM=xterm-256color
             export LANG=C.UTF-8
+            export PROOT_TMP_DIR=/tmp
+            export TMPDIR=/tmp
+            export TEMP=/tmp
             PS1='\[\033[01;35m\]\u@iriscode\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
             alias ll='ls -la'
             alias la='ls -A'
