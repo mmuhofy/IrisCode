@@ -113,6 +113,9 @@ dependencies {
     // Icons
     implementation(libs.compose.icons.lucide)
 
+    // Markdown
+    implementation(libs.compose.markdown)
+
     // Diff
     implementation(libs.java.diff.utils)
 

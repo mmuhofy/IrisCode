@@ -18,6 +18,7 @@ import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurface
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import com.iris.iriscode.ui.theme.IrisTextSecondary
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,10 +56,11 @@ private fun UserBubble(message: ChatMessage.UserText) {
                     .background(IrisSurface)
                     .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp)
             ) {
-                Text(
-                    text = message.text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                MarkdownText(
+                    markdown = message.text,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             }
             Text(
@@ -95,10 +97,11 @@ private fun AgentBubble(message: ChatMessage.AgentText) {
         }
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(
-                text = message.text,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+            MarkdownText(
+                markdown = message.text,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             )
             Text(
                 text = formatTimestamp(message.timestamp),

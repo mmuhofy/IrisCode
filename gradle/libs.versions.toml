@@ -16,6 +16,7 @@ diffUtils = "4.12"
 coreKtx = "1.17.0"
 appcompat = "1.7.1"
 material = "1.13.0"
+composeMarkdown = "0.7.1"
 composeIconsLucide = "2.2.1"
 activityCompose = "1.9.2"
 hiltNavigationCompose = "1.2.0"
@@ -41,6 +42,7 @@ compose-material-icons-extended = { group = "androidx.compose.material", name = 
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 compose-icons-lucide = { group = "com.composables", name = "icons-lucide-cmp", version.ref = "composeIconsLucide" }
+compose-markdown = { group = "com.github.jeziellago", name = "compose-markdown", version.ref = "composeMarkdown" }
 
 # Navigation
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }

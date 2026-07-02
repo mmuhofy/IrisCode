@@ -229,11 +229,10 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .scale(backScale)
                     .clip(CircleShape)
-                    .background(IrisSurfaceVariant)
-                    .border(1.dp, IrisOutline, CircleShape)
+                    .background(IrisSurface)
                     .clickable(
                         interactionSource = backInteractionSource,
                         indication = null,
@@ -346,11 +345,10 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .scale(moreScale)
                     .clip(CircleShape)
-                    .background(IrisSurfaceVariant)
-                    .border(1.dp, IrisOutline, CircleShape)
+                    .background(IrisSurface)
                     .clickable(
                         interactionSource = moreInteractionSource,
                         indication = null,
