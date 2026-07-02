@@ -40,11 +40,9 @@ tasks.register("downloadUbuntuRootfs") {
     }
 }
 
-afterEvaluate {
-    android.applicationVariants.all { variant ->
-        variant.preBuildProvider.configure {
-            dependsOn("downloadUbuntuRootfs")
-        }
+tasks.whenTaskAdded {
+    if (name == "preBuild") {
+        dependsOn("downloadUbuntuRootfs")
     }
 }
 
