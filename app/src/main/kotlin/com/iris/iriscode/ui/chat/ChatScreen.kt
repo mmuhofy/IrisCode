@@ -2,10 +2,7 @@ package com.iris.iriscode.ui.chat
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.BorderStroke
@@ -840,17 +837,13 @@ private fun OptionsSheet(
 
 @Composable
 private fun TypingIndicator() {
-    val infiniteTransition = rememberInfiniteTransition(label = "typing")
-
-    val brainAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "brainPulse"
-    )
+    val brainAnim = remember { Animatable(0.5f) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            brainAnim.animateTo(1f, tween(800))
+            brainAnim.animateTo(0.5f, tween(800))
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -868,7 +861,7 @@ private fun TypingIndicator() {
             Icon(
                 imageVector = Lucide.BrainCircuit,
                 contentDescription = null,
-                tint = IrisPrimary.copy(alpha = brainAlpha),
+                tint = IrisPrimary.copy(alpha = brainAnim.value),
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -884,7 +877,7 @@ private fun TypingIndicator() {
                     val scale = remember { Animatable(0.4f) }
                     LaunchedEffect(Unit) {
                         delay(index * 200L)
-                        while (isActive) {
+                        while (true) {
                             scale.animateTo(1f, tween(500))
                             scale.animateTo(0.4f, tween(500))
                         }
