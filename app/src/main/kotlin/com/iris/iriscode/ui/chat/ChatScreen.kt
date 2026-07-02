@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
+import java.io.File
 import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.components.FilesTab
 import com.iris.iriscode.ui.chat.components.MessageBubble
@@ -74,6 +75,7 @@ fun ChatScreen(
     ) {
         TopBar(
             projectName = projectName,
+            projectPath = projectPath,
             currentModel = state.currentModel,
             modelDropdownExpanded = state.modelDropdownExpanded,
             showMoreMenu = state.showMoreMenu,
@@ -196,6 +198,7 @@ fun ChatScreen(
 @Composable
 private fun TopBar(
     projectName: String,
+    projectPath: String?,
     currentModel: String,
     modelDropdownExpanded: Boolean,
     showMoreMenu: Boolean,
@@ -226,9 +229,11 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .scale(backScale)
                     .clip(CircleShape)
+                    .background(IrisSurfaceVariant)
+                    .border(1.dp, IrisOutline, CircleShape)
                     .clickable(
                         interactionSource = backInteractionSource,
                         indication = null,
@@ -240,7 +245,7 @@ private fun TopBar(
                     imageVector = Lucide.ArrowLeft,
                     contentDescription = "Back",
                     tint = IrisText,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -250,18 +255,24 @@ private fun TopBar(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(IrisOutline)
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    text = "main",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = IrisTextSecondary
-                )
+            val hasGit = remember(projectPath) {
+                projectPath?.let { File(it, ".git").isDirectory } ?: false
+            }
+            if (hasGit) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(IrisSurfaceVariant)
+                        .border(0.5.dp, IrisOutline, RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "main",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextSecondary
+                    )
+                }
             }
         }
 
@@ -335,9 +346,11 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .scale(moreScale)
                     .clip(CircleShape)
+                    .background(IrisSurfaceVariant)
+                    .border(1.dp, IrisOutline, CircleShape)
                     .clickable(
                         interactionSource = moreInteractionSource,
                         indication = null,
@@ -346,10 +359,10 @@ private fun TopBar(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Lucide.Menu,
+                    imageVector = Lucide.EllipsisVertical,
                     contentDescription = "More options",
                     tint = IrisText,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
