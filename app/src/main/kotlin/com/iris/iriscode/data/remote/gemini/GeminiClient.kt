@@ -2,7 +2,9 @@ package com.iris.iriscode.data.remote.gemini
 
 import com.iris.iriscode.domain.model.ChatMessage
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType.Companion.toMediaType
@@ -84,7 +86,7 @@ class GeminiClient @Inject constructor() {
             .newEventSource(request, listener)
 
         awaitClose { eventSource.cancel() }
-    }
+    }.buffer(Channel.UNLIMITED)
 
     // ─── Build request body ──────────────────────────────────────────────────
 

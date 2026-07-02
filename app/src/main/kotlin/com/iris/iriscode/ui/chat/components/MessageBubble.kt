@@ -11,12 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurface
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
+import com.iris.iriscode.ui.theme.IrisText
 import com.iris.iriscode.ui.theme.IrisTextSecondary
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import java.text.SimpleDateFormat
@@ -42,34 +42,25 @@ fun MessageBubble(
 
 @Composable
 private fun UserBubble(message: ChatMessage.UserText) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 48.dp, end = 16.dp, top = 2.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.Bottom
+            .padding(horizontal = 24.dp, vertical = 6.dp)
     ) {
-        Spacer(modifier = Modifier.weight(1f))
-        Column(horizontalAlignment = Alignment.End) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(IrisSurface)
-                    .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp)
-            ) {
-                MarkdownText(
-                    markdown = message.text,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
-            Text(
-                text = formatTimestamp(message.timestamp),
-                style = MaterialTheme.typography.labelSmall,
-                color = IrisTextSecondary.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 2.dp, end = 4.dp)
+        MarkdownText(
+            markdown = message.text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = IrisText
             )
-        }
+        )
+        Text(
+            text = formatTimestamp(message.timestamp),
+            style = MaterialTheme.typography.labelSmall,
+            color = IrisTextSecondary.copy(alpha = 0.6f),
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 2.dp)
+        )
     }
 }
 
@@ -78,8 +69,8 @@ private fun AgentBubble(message: ChatMessage.AgentText) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 48.dp, top = 2.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.Bottom
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
@@ -95,19 +86,19 @@ private fun AgentBubble(message: ChatMessage.AgentText) {
                 modifier = Modifier.size(16.dp)
             )
         }
-        Spacer(modifier = Modifier.width(10.dp))
-        Column {
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
             MarkdownText(
                 markdown = message.text,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = IrisText
                 )
             )
             Text(
                 text = formatTimestamp(message.timestamp),
                 style = MaterialTheme.typography.labelSmall,
                 color = IrisTextSecondary.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 2.dp, start = 4.dp)
+                modifier = Modifier.padding(top = 2.dp)
             )
         }
     }
