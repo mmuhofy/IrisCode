@@ -483,7 +483,7 @@ private fun InputBar(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    val borderColor by animateColorAsState<Color>(
+    val borderColor by animateColorAsState(
         targetValue = if (isFocused) IrisPrimary.copy(alpha = 0.5f) else IrisOutline,
         animationSpec = tween(300),
         label = "borderColor"
