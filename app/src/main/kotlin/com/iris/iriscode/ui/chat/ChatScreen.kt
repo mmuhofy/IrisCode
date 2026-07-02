@@ -216,7 +216,26 @@ private fun TopBar(
             modifier = Modifier.align(Alignment.CenterStart),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            val backInteractionSource = remember { MutableInteractionSource() }
+            val isBackPressed by backInteractionSource.collectIsPressedAsState()
+            val backScale by animateFloatAsState(
+                targetValue = if (isBackPressed) 0.88f else 1f,
+                animationSpec = tween(100),
+                label = "backScale"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .scale(backScale)
+                    .clip(CircleShape)
+                    .clickable(
+                        interactionSource = backInteractionSource,
+                        indication = null,
+                        onClick = onBack
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     imageVector = Lucide.ArrowLeft,
                     contentDescription = "Back",
@@ -306,7 +325,26 @@ private fun TopBar(
 
         // Right: more menu
         Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-            IconButton(onClick = onMoreClick) {
+            val moreInteractionSource = remember { MutableInteractionSource() }
+            val isMorePressed by moreInteractionSource.collectIsPressedAsState()
+            val moreScale by animateFloatAsState(
+                targetValue = if (isMorePressed) 0.88f else 1f,
+                animationSpec = tween(100),
+                label = "moreScale"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .scale(moreScale)
+                    .clip(CircleShape)
+                    .clickable(
+                        interactionSource = moreInteractionSource,
+                        indication = null,
+                        onClick = onMoreClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     imageVector = Lucide.Menu,
                     contentDescription = "More options",
@@ -434,20 +472,42 @@ private fun PillTabs(
         ChatTab.entries.forEach { tab ->
             val isSelected = tab == selectedTab
 
+            val bgColor by animateColorAsState(
+                targetValue = if (isSelected) IrisPrimary.copy(alpha = 0.15f)
+                              else IrisSurfaceVariant,
+                animationSpec = tween(250),
+                label = "tabBg_${tab.name}"
+            )
+            val fgColor by animateColorAsState(
+                targetValue = if (isSelected) IrisPrimary else IrisTextSecondary,
+                animationSpec = tween(250),
+                label = "tabFg_${tab.name}"
+            )
+
             val tabIcon = when (tab) {
                 ChatTab.Chat -> Lucide.MessageSquare
                 ChatTab.Terminal -> Lucide.SquareTerminal
                 ChatTab.Files -> Lucide.Folder
             }
 
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+            val pressScale by animateFloatAsState(
+                targetValue = if (isPressed) 0.94f else 1f,
+                animationSpec = tween(100),
+                label = "tabScale_${tab.name}"
+            )
+
             Box(
                 modifier = Modifier
+                    .scale(pressScale)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        if (isSelected) IrisPrimary.copy(alpha = 0.15f)
-                        else IrisSurfaceVariant
+                    .background(bgColor)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = { onTabSelect(tab) }
                     )
-                    .clickable { onTabSelect(tab) }
                     .padding(horizontal = 14.dp, vertical = 7.dp)
             ) {
                 Row(
@@ -456,7 +516,7 @@ private fun PillTabs(
                     Icon(
                         imageVector = tabIcon,
                         contentDescription = null,
-                        tint = if (isSelected) IrisPrimary else IrisTextSecondary,
+                        tint = fgColor,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -464,7 +524,7 @@ private fun PillTabs(
                         text = tab.name,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                        color = if (isSelected) IrisPrimary else IrisTextSecondary
+                        color = fgColor
                     )
                 }
             }
