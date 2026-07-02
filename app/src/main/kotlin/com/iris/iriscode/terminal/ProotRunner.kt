@@ -164,7 +164,7 @@ class ProotRunner(
         )
         for ((key, value) in androidEnv) {
             if (value != null) {
-                add("$key=$value")
+                env.add("$key=$value")
             }
         }
 
@@ -177,7 +177,7 @@ class ProotRunner(
                     "LD_LIBRARY_PATH", "LD_PRELOAD", "PREFIX",
                     "PROOT_LOADER", "PROOT_LOADER32", "PROOT_TMP_DIR",
                     "BOOTCLASSPATH", "DEX2OATBOOTCLASSPATH" -> {}
-                    else -> if (key.startsWith("ANDROID_")) {} else add("$key=$value")
+                    else -> if (key.startsWith("ANDROID_")) {} else env.add("$key=$value")
                 }
             }
         } catch (_: Exception) {}
