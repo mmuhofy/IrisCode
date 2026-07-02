@@ -40,8 +40,8 @@ tasks.register("downloadUbuntuRootfs") {
     }
 }
 
-tasks.whenTaskAdded {
-    if (name == "preBuild") {
+afterEvaluate {
+    tasks.matching { it.name.startsWith("mergeAssets") }.configureEach {
         dependsOn("downloadUbuntuRootfs")
     }
 }
