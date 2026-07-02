@@ -5,17 +5,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.Session
+import com.iris.iriscode.ui.components.ModernCard
 import com.iris.iriscode.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,50 +46,11 @@ fun WorkspaceDetailScreen(
             .background(IrisBackground)
             .statusBarsPadding()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp, end = 20.dp, top = 4.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Lucide.ArrowLeft,
-                    contentDescription = "Back",
-                    tint = IrisText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(IrisPrimary.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Lucide.FolderKanban,
-                    contentDescription = null,
-                    tint = IrisPrimary,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = state.projectName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = state.projectPath,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = IrisTextSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+        TopBar(
+            name = state.projectName,
+            path = state.projectPath,
+            onBack = onBack
+        )
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -93,7 +58,7 @@ fun WorkspaceDetailScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                ContextFilesSection(contextFiles = state.contextFiles)
+                ContextFilesSection()
             }
 
             item {
@@ -101,9 +66,10 @@ fun WorkspaceDetailScreen(
                 Text(
                     text = "Chats",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = IrisTextSecondary,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    fontWeight = FontWeight.Bold,
+                    color = IrisTextMuted,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                 )
             }
 
@@ -112,19 +78,28 @@ fun WorkspaceDetailScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 32.dp),
+                            .padding(vertical = 40.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "No chats in this workspace",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = IrisTextMuted
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Lucide.MessageSquarePlus,
+                                contentDescription = null,
+                                tint = IrisTextMuted.copy(alpha = 0.4f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No chats yet",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = IrisTextMuted
+                            )
+                        }
                     }
                 }
             } else {
                 items(state.sessions, key = { it.id }) { session ->
-                    WorkspaceSessionCard(
+                    SessionCard(
                         session = session,
                         onClick = {
                             onChatClick(
@@ -142,7 +117,60 @@ fun WorkspaceDetailScreen(
 }
 
 @Composable
-private fun ContextFilesSection(contextFiles: List<String>) {
+private fun TopBar(
+    name: String,
+    path: String,
+    onBack: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 20.dp, top = 4.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Lucide.ArrowLeft,
+                contentDescription = "Back",
+                tint = IrisText,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(IrisPrimary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Lucide.FolderKanban,
+                contentDescription = null,
+                tint = IrisPrimary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = IrisText
+            )
+            Text(
+                text = path,
+                style = MaterialTheme.typography.labelSmall,
+                color = IrisTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContextFilesSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,129 +179,101 @@ private fun ContextFilesSection(contextFiles: List<String>) {
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Lucide.BookOpenText,
-                contentDescription = null,
-                tint = IrisPrimary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(IrisPrimary.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Lucide.BookOpenText,
+                    contentDescription = null,
+                    tint = IrisPrimary,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "Context Files",
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Bold
             )
         }
-        Spacer(modifier = Modifier.height(12.dp))
 
-        if (contextFiles.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(IrisSurfaceVariant)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Lucide.FilePlus,
-                        contentDescription = null,
-                        tint = IrisTextMuted,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "No context files yet",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = IrisTextMuted
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Add files for the agent to reference",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = IrisTextMuted.copy(alpha = 0.6f)
-                    )
-                }
-            }
-        } else {
-            contextFiles.forEach { file ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { }
-                        .padding(vertical = 8.dp, horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Lucide.FileText,
-                        contentDescription = null,
-                        tint = IrisTextSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = file,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = IrisText
-                    )
-                }
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(IrisSurfaceVariant)
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Lucide.FilePlus,
+                    contentDescription = null,
+                    tint = IrisTextMuted.copy(alpha = 0.3f),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "No context files yet",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = IrisTextMuted
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Agent can read these on every turn",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = IrisTextMuted.copy(alpha = 0.6f)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedButton(
             onClick = { },
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = IrisPrimary),
+            border = BorderStroke(1.dp, IrisPrimary.copy(alpha = 0.3f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = Lucide.Plus,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(15.dp)
             )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Add File", fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Add File", fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
 @Composable
-private fun WorkspaceSessionCard(
+private fun SessionCard(
     session: Session,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .background(IrisSurfaceContainer)
-            .padding(start = 3.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+    ModernCard(
+        onClick = onClick
     ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(44.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(IrisPrimary)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
         Box(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(IrisPrimary.copy(alpha = 0.12f)),
+                .background(IrisPrimary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Lucide.MessageSquareText,
                 contentDescription = null,
                 tint = IrisPrimary,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
@@ -295,19 +295,64 @@ private fun WorkspaceSessionCard(
                 Text(
                     text = formatTimestamp(session.createdAt),
                     style = MaterialTheme.typography.labelSmall,
-                    color = IrisTextSecondary.copy(alpha = 0.6f)
+                    color = IrisTextMuted.copy(alpha = 0.7f)
                 )
                 if (session.toolCallCount > 0) {
-                    Text(text = " · ", style = MaterialTheme.typography.labelSmall, color = IrisTextSecondary.copy(alpha = 0.3f))
-                    Icon(Lucide.Terminal, contentDescription = null, tint = IrisTextSecondary.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text("${session.toolCallCount}", style = MaterialTheme.typography.labelSmall, color = IrisTextSecondary.copy(alpha = 0.6f))
+                    Text(
+                        text = "  ·  ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.3f)
+                    )
+                    Icon(
+                        imageVector = Lucide.BrainCircuit,
+                        contentDescription = null,
+                        tint = IrisTextMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "${session.toolCallCount}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.7f)
+                    )
                 }
                 if (session.duration > 0) {
-                    Text(text = " · ", style = MaterialTheme.typography.labelSmall, color = IrisTextSecondary.copy(alpha = 0.3f))
-                    Icon(Lucide.Clock, contentDescription = null, tint = IrisTextSecondary.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(formatDuration(session.duration), style = MaterialTheme.typography.labelSmall, color = IrisTextSecondary.copy(alpha = 0.6f))
+                    Text(
+                        text = "  ·  ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.3f)
+                    )
+                    Icon(
+                        imageVector = Lucide.Clock,
+                        contentDescription = null,
+                        tint = IrisTextMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = formatDuration(session.duration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.7f)
+                    )
+                }
+                if (session.cost > 0) {
+                    Text(
+                        text = "  ·  ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.3f)
+                    )
+                    Icon(
+                        imageVector = Lucide.Coins,
+                        contentDescription = null,
+                        tint = IrisTextMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "$${String.format("%.4f", session.cost)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IrisTextMuted.copy(alpha = 0.7f)
+                    )
                 }
             }
         }
@@ -315,8 +360,8 @@ private fun WorkspaceSessionCard(
         Icon(
             imageVector = Lucide.ChevronRight,
             contentDescription = null,
-            tint = IrisTextSecondary.copy(alpha = 0.4f),
-            modifier = Modifier.size(18.dp)
+            tint = IrisTextMuted.copy(alpha = 0.2f),
+            modifier = Modifier.size(16.dp)
         )
     }
 }
