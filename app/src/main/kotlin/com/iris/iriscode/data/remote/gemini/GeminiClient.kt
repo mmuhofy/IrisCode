@@ -70,10 +70,9 @@ class GeminiClient @Inject constructor() {
                 t: Throwable?,
                 response: Response?
             ) {
-                val msg = t?.message ?: response?.let {
-                    "HTTP ${it.code}: ${it.body?.string()?.take(200)}"
-                } ?: "Unknown error"
-                trySend("\n\n[Connection error: $msg]")
+                if (t != null) {
+                    trySend("\n\n[Connection error: ${t.message}]")
+                }
                 close()
             }
 

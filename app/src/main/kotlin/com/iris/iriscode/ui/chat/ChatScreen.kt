@@ -214,7 +214,7 @@ private fun TopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+            .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 6.dp)
     ) {
         // Left: back + name + branch
         Row(
@@ -231,11 +231,10 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .scale(backScale)
                     .clip(CircleShape)
-                    .background(IrisBackground)
-                    .border(1.dp, IrisOutline, CircleShape)
+                    .background(IrisSurfaceVariant)
                     .clickable(
                         interactionSource = backInteractionSource,
                         indication = null,
@@ -250,6 +249,8 @@ private fun TopBar(
                     modifier = Modifier.size(18.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.width(10.dp))
 
             Text(
                 text = projectName,
@@ -348,11 +349,10 @@ private fun TopBar(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .scale(moreScale)
                     .clip(CircleShape)
-                    .background(IrisBackground)
-                    .border(1.dp, IrisOutline, CircleShape)
+                    .background(IrisSurfaceVariant)
                     .clickable(
                         interactionSource = moreInteractionSource,
                         indication = null,
@@ -837,63 +837,48 @@ private fun OptionsSheet(
 
 @Composable
 private fun TypingIndicator() {
-    val brainAnim = remember { Animatable(0.5f) }
+    val brainAnim = remember { Animatable(0.3f) }
     LaunchedEffect(Unit) {
         while (true) {
-            brainAnim.animateTo(1f, tween(800))
-            brainAnim.animateTo(0.5f, tween(800))
+            brainAnim.animateTo(1f, tween(400))
+            brainAnim.animateTo(0.3f, tween(400))
         }
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(IrisSurfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Lucide.BrainCircuit,
-                contentDescription = null,
-                tint = IrisPrimary.copy(alpha = brainAnim.value),
-                modifier = Modifier.size(14.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(18.dp))
-                .background(IrisSurface)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                repeat(3) { index ->
-                    val scale = remember { Animatable(0.4f) }
-                    LaunchedEffect(Unit) {
-                        delay(index * 200L)
-                        while (true) {
-                            scale.animateTo(1f, tween(500))
-                            scale.animateTo(0.4f, tween(500))
-                        }
+        Icon(
+            imageVector = Lucide.BrainCircuit,
+            contentDescription = null,
+            tint = IrisPrimary.copy(alpha = brainAnim.value),
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            repeat(3) { index ->
+                val scale = remember { Animatable(0.3f) }
+                LaunchedEffect(Unit) {
+                    delay(index * 200L)
+                    while (true) {
+                        scale.animateTo(1f, tween(400))
+                        scale.animateTo(0.3f, tween(400))
                     }
-                    Box(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = scale.value
-                                scaleY = scale.value
-                                alpha = scale.value
-                            }
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(IrisTextSecondary.copy(alpha = 0.7f))
-                    )
                 }
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = scale.value
+                            scaleY = scale.value
+                            alpha = scale.value
+                        }
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(IrisPrimary)
+                )
             }
         }
     }

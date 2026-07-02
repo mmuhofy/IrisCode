@@ -3,8 +3,6 @@ package com.iris.iriscode.ui.chat.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.composables.icons.lucide.*
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,9 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.domain.model.ChatMessage
-import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurface
-import com.iris.iriscode.ui.theme.IrisSurfaceVariant
 import com.iris.iriscode.ui.theme.IrisText
 import com.iris.iriscode.ui.theme.IrisTextSecondary
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -66,41 +62,23 @@ private fun UserBubble(message: ChatMessage.UserText) {
 
 @Composable
 private fun AgentBubble(message: ChatMessage.AgentText) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.Top
+            .padding(horizontal = 24.dp, vertical = 6.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(IrisSurfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Lucide.BrainCircuit,
-                contentDescription = "Iris",
-                tint = IrisPrimary,
-                modifier = Modifier.size(16.dp)
+        MarkdownText(
+            markdown = message.text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = IrisText
             )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            MarkdownText(
-                markdown = message.text,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = IrisText
-                )
-            )
-            Text(
-                text = formatTimestamp(message.timestamp),
-                style = MaterialTheme.typography.labelSmall,
-                color = IrisTextSecondary.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 2.dp)
-            )
-        }
+        )
+        Text(
+            text = formatTimestamp(message.timestamp),
+            style = MaterialTheme.typography.labelSmall,
+            color = IrisTextSecondary.copy(alpha = 0.6f),
+            modifier = Modifier.padding(top = 2.dp)
+        )
     }
 }
 
