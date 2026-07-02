@@ -25,27 +25,27 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.iris.iriscode.ui.chat.ChatScreen
 import com.iris.iriscode.ui.chat.ChatViewModel
+import com.iris.iriscode.ui.home.HomeScreen
+import com.iris.iriscode.ui.home.HomeViewModel
 import com.iris.iriscode.ui.onboarding.ApiKeyScreen
 import com.iris.iriscode.ui.onboarding.CreateSessionScreen
 import com.iris.iriscode.ui.onboarding.WelcomeScreen
 import com.iris.iriscode.ui.onboarding.OnboardingEvent
 import com.iris.iriscode.ui.onboarding.OnboardingStep
 import com.iris.iriscode.ui.onboarding.OnboardingViewModel
-import com.iris.iriscode.ui.projects.ProjectsScreen
-import com.iris.iriscode.ui.projects.ProjectsViewModel
-import com.iris.iriscode.ui.sessions.SessionListScreen
-import com.iris.iriscode.ui.sessions.SessionListViewModel
 import com.iris.iriscode.ui.theme.IrisCodeTheme
 import com.iris.iriscode.ui.theme.IrisPrimary
 import com.iris.iriscode.ui.theme.IrisSurfaceVariant
+import com.iris.iriscode.ui.workspace.WorkspaceDetailScreen
+import com.iris.iriscode.ui.workspace.WorkspaceDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.ui.text.font.FontWeight
 
 private sealed class Screen {
     object Onboarding : Screen()
-    object Projects : Screen()
-    data class SessionList(val projectName: String, val projectId: Long, val projectPath: String) : Screen()
+    object Home : Screen()
     data class Chat(val projectName: String, val projectId: Long, val projectPath: String, val sessionId: String? = null) : Screen()
+    data class WorkspaceDetail(val projectName: String, val projectId: Long, val projectPath: String) : Screen()
 }
 
 @AndroidEntryPoint
@@ -54,8 +54,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val appDir = filesDir.resolve("projects").absolutePath
 
         setContent {
             IrisCodeTheme {
@@ -67,7 +65,7 @@ class MainActivity : ComponentActivity() {
                     onboardingVm.events.collect { event ->
                         when (event) {
                             is OnboardingEvent.ProjectCreated -> {
-                                currentScreen = Screen.SessionList(event.name, event.id, event.path)
+                                currentScreen = Screen.Home
                             }
                             is OnboardingEvent.NextStep -> { }
                         }
@@ -75,7 +73,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (state.onboardingComplete && currentScreen == Screen.Onboarding) {
-                    currentScreen = Screen.Projects
+                    currentScreen = Screen.Home
                 }
 
                 when (val screen = currentScreen) {
@@ -104,8 +102,8 @@ class MainActivity : ComponentActivity() {
                                         OnboardingStep.CreateSession -> {
                                             CreateSessionScreen(
                                                 onCreate = { name, _ ->
-                                                    val path = "$appDir/$name"
-                                                    onboardingVm.createFirstProject(name, path)
+                                                    onboardingVm.createFirstProject(name, "")
+                                                    currentScreen = Screen.Home
                                                 }
                                             )
                                         }
@@ -120,32 +118,16 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    is Screen.Projects -> {
-                        val projectsVm: ProjectsViewModel = hiltViewModel()
-                        ProjectsScreen(
-                            viewModel = projectsVm,
-                            onProjectClick = { project ->
-                                currentScreen = Screen.SessionList(project.name, project.id, project.path)
+                    is Screen.Home -> {
+                        val homeVm: HomeViewModel = hiltViewModel()
+                        HomeScreen(
+                            viewModel = homeVm,
+                            onChatClick = { projectName, projectId, projectPath, sessionId ->
+                                currentScreen = Screen.Chat(projectName, projectId, projectPath, sessionId)
                             },
-                            onCreateProject = { projectsVm.showCreateSheet() }
-                        )
-                    }
-
-                    is Screen.SessionList -> {
-                        val sessionVm: SessionListViewModel = hiltViewModel()
-                        LaunchedEffect(screen.projectId) {
-                            sessionVm.init(screen.projectName, screen.projectId, screen.projectPath)
-                        }
-                        SessionListScreen(
-                            viewModel = sessionVm,
-                            onSessionClick = { sessionId ->
-                                currentScreen = Screen.Chat(screen.projectName, screen.projectId, screen.projectPath, sessionId)
-                            },
-                            onNewSession = {
-                                val id = sessionVm.createSession()
-                                currentScreen = Screen.Chat(screen.projectName, screen.projectId, screen.projectPath, id)
-                            },
-                            onBack = { currentScreen = Screen.Projects }
+                            onWorkspaceClick = { projectName, projectId, projectPath ->
+                                currentScreen = Screen.WorkspaceDetail(projectName, projectId, projectPath)
+                            }
                         )
                     }
 
@@ -155,10 +137,23 @@ class MainActivity : ComponentActivity() {
                             viewModel = chatVm,
                             projectName = screen.projectName,
                             projectPath = screen.projectPath,
-                            onBack = { currentScreen = Screen.SessionList(screen.projectName, screen.projectId, screen.projectPath) }
+                            onBack = { currentScreen = Screen.Home }
                         )
                     }
 
+                    is Screen.WorkspaceDetail -> {
+                        val workspaceVm: WorkspaceDetailViewModel = hiltViewModel()
+                        WorkspaceDetailScreen(
+                            viewModel = workspaceVm,
+                            projectName = screen.projectName,
+                            projectId = screen.projectId,
+                            projectPath = screen.projectPath,
+                            onBack = { currentScreen = Screen.Home },
+                            onChatClick = { projectName, projectId, projectPath, sessionId ->
+                                currentScreen = Screen.Chat(projectName, projectId, projectPath, sessionId)
+                            }
+                        )
+                    }
                 }
             }
         }
