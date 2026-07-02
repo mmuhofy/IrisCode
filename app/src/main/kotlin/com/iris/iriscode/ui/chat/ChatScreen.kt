@@ -1,6 +1,6 @@
 package com.iris.iriscode.ui.chat
 
-import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -482,7 +483,7 @@ private fun InputBar(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    val borderColor by animateColorAsState(
+    val borderColor by animateColorAsState<Color>(
         targetValue = if (isFocused) IrisPrimary.copy(alpha = 0.5f) else IrisOutline,
         animationSpec = tween(300),
         label = "borderColor"
@@ -637,7 +638,7 @@ private fun InputBar(
                                     .clip(CircleShape)
                                     .background(
                                         if (inputText.isNotBlank()) SendGradient
-                                        else IrisSurfaceVariant
+                                        else SolidColor(IrisSurfaceVariant)
                                     )
                                     .clickable(
                                         interactionSource = sendInteractionSource,
