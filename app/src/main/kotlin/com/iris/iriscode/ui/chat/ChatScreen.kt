@@ -1,5 +1,6 @@
 package com.iris.iriscode.ui.chat
 
+import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -23,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -37,6 +40,10 @@ import com.iris.iriscode.ui.chat.components.MessageBubble
 import com.iris.iriscode.ui.chat.components.SlashMenu
 import com.iris.iriscode.ui.terminal.TerminalScreen
 import com.iris.iriscode.ui.theme.*
+
+private val SendGradient = Brush.horizontalGradient(
+    colors = listOf(IrisAccent, IrisPrimary)
+)
 
 @Composable
 fun ChatScreen(
@@ -473,6 +480,14 @@ private fun InputBar(
     onToggleExpanded: () -> Unit,
     onSwipeLeft: () -> Unit
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) IrisPrimary.copy(alpha = 0.5f) else IrisOutline,
+        animationSpec = tween(300),
+        label = "borderColor"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -485,7 +500,11 @@ private fun InputBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .border(1.dp, IrisOutline, RoundedCornerShape(24.dp))
+                .border(
+                    width = if (isFocused) 1.5.dp else 1.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(24.dp)
+                )
                 .background(IrisSurface)
                 .pointerInput(Unit) {
                     var dragTotal = 0f
@@ -513,7 +532,8 @@ private fun InputBar(
                     minLines = 1,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .onFocusChanged { isFocused = it.isFocused },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() }),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -533,9 +553,25 @@ private fun InputBar(
                         .padding(start = 8.dp, end = 8.dp, bottom = 4.dp, top = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = onToggleExpanded,
-                        modifier = Modifier.size(32.dp)
+                    val plusInteractionSource = remember { MutableInteractionSource() }
+                    val isPlusPressed by plusInteractionSource.collectIsPressedAsState()
+                    val plusScale by animateFloatAsState(
+                        targetValue = if (isPlusPressed) 0.88f else 1f,
+                        animationSpec = tween(100),
+                        label = "plusScale"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .scale(plusScale)
+                            .clip(CircleShape)
+                            .clickable(
+                                interactionSource = plusInteractionSource,
+                                indication = null,
+                                onClick = onToggleExpanded
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Lucide.Plus,
@@ -551,9 +587,25 @@ private fun InputBar(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        IconButton(
-                            onClick = { /* voice input */ },
-                            modifier = Modifier.size(32.dp)
+                        val micInteractionSource = remember { MutableInteractionSource() }
+                        val isMicPressed by micInteractionSource.collectIsPressedAsState()
+                        val micScale by animateFloatAsState(
+                            targetValue = if (isMicPressed) 0.88f else 1f,
+                            animationSpec = tween(100),
+                            label = "micScale"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .scale(micScale)
+                                .clip(CircleShape)
+                                .clickable(
+                                    interactionSource = micInteractionSource,
+                                    indication = null,
+                                    onClick = { /* voice input */ }
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Lucide.Mic,
@@ -570,15 +622,26 @@ private fun InputBar(
                                 color = IrisPrimary
                             )
                         } else {
+                            val sendInteractionSource = remember { MutableInteractionSource() }
+                            val isSendPressed by sendInteractionSource.collectIsPressedAsState()
+                            val sendScale by animateFloatAsState(
+                                targetValue = if (isSendPressed) 1.12f else 1f,
+                                animationSpec = tween(100),
+                                label = "sendScale"
+                            )
+
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
+                                    .scale(sendScale)
                                     .clip(CircleShape)
                                     .background(
-                                        if (inputText.isNotBlank()) IrisPrimary
+                                        if (inputText.isNotBlank()) SendGradient
                                         else IrisSurfaceVariant
                                     )
                                     .clickable(
+                                        interactionSource = sendInteractionSource,
+                                        indication = null,
                                         enabled = inputText.isNotBlank(),
                                         onClick = onSend
                                     ),
