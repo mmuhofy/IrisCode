@@ -2,8 +2,10 @@ package com.iris.iriscode.ui.home
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -40,7 +42,7 @@ private val SectionGradient = Brush.horizontalGradient(
     )
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
@@ -48,6 +50,8 @@ fun HomeScreen(
     onWorkspaceClick: (projectName: String, projectId: Long, projectPath: String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    var renameTarget by remember { mutableStateOf<Session?>(null) }
+    var renameText by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -70,7 +74,7 @@ fun HomeScreen(
                     )
                 }
             } else if (state.workspaceGroups.isEmpty()) {
-                EmptyState(onNewChat = viewModel::showNewChatSheet)
+                EmptyState(onNewChat = { viewModel.quickCreateChat(onChatClick) })
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -111,6 +115,10 @@ fun HomeScreen(
                                         group.project.path,
                                         session.id
                                     )
+                                },
+                                onLongClick = {
+                                    renameTarget = session
+                                    renameText = session.summary.ifEmpty { "New chat" }
                                 }
                             )
                         }
@@ -120,7 +128,7 @@ fun HomeScreen(
         }
 
         FloatingActionButton(
-            onClick = viewModel::showNewChatSheet,
+            onClick = { viewModel.quickCreateChat(onChatClick) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp)
@@ -141,14 +149,12 @@ fun HomeScreen(
         }
     }
 
-    if (state.showNewChatSheet) {
-        NewChatSheet(
-            name = state.newChatName,
-            path = state.newChatPath,
-            onNameChange = viewModel::updateNewChatName,
-            onPathChange = viewModel::updateNewChatPath,
-            onCreate = { viewModel.createChat(onChatClick) },
-            onDismiss = viewModel::hideNewChatSheet
+    if (renameTarget != null) {
+        RenameDialog(
+            currentName = renameText,
+            onConfirm = { renameTarget = null },
+            onDismiss = { renameTarget = null },
+            onNameChange = { renameText = it }
         )
     }
 }
@@ -262,15 +268,54 @@ private fun WorkspaceHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChatItem(
     session: Session,
     projectPath: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
-    ModernCard(
-        onClick = onClick
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = tween(100),
+        label = "cardScale"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(pressScale)
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        IrisPrimary.copy(alpha = 0.04f),
+                        IrisSurfaceContainer,
+                        IrisSurfaceContainer
+                    ),
+                    startX = 0f,
+                    endX = 400f
+                )
+            )
+            .combinedClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(start = 0.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(42.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(IrisPrimary)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -386,110 +431,58 @@ private fun EmptyState(onNewChat: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NewChatSheet(
-    name: String,
-    path: String,
+private fun RenameDialog(
+    currentName: String,
     onNameChange: (String) -> Unit,
-    onPathChange: (String) -> Unit,
-    onCreate: () -> Unit,
+    onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
+    AlertDialog(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
         containerColor = IrisBackground,
-        contentColor = IrisText,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp)
-                .navigationBarsPadding()
-        ) {
-            Text(
-                text = "New Chat",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Choose a working directory for this chat",
-                style = MaterialTheme.typography.bodySmall,
-                color = IrisTextMuted
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = onNameChange,
-                label = { Text("Name") },
-                placeholder = { Text("e.g. My Project") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = IrisPrimary,
-                    unfocusedBorderColor = IrisOutline,
-                    cursorColor = IrisPrimary,
-                    focusedContainerColor = IrisSurface,
-                    unfocusedContainerColor = IrisSurface
+        titleContentColor = IrisText,
+        textContentColor = IrisTextSecondary,
+        shape = RoundedCornerShape(16.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Lucide.Pencil,
+                    contentDescription = null,
+                    tint = IrisPrimary,
+                    modifier = Modifier.size(18.dp)
                 )
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            OutlinedTextField(
-                value = path,
-                onValueChange = onPathChange,
-                label = { Text("Working Directory") },
-                placeholder = { Text("/Projects/My Project") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = IrisPrimary,
-                    unfocusedBorderColor = IrisOutline,
-                    cursorColor = IrisPrimary,
-                    focusedContainerColor = IrisSurface,
-                    unfocusedContainerColor = IrisSurface
-                )
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onCreate,
-                enabled = name.isNotBlank() && path.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = IrisPrimary,
-                    contentColor = IrisBackground,
-                    disabledContainerColor = IrisSurfaceVariant,
-                    disabledContentColor = IrisTextDisabled
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 4.dp
-                )
-            ) {
-                Text(
-                    text = "Start Chat",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Rename Chat", fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
+        },
+        text = {
+            OutlinedTextField(
+                value = currentName,
+                onValueChange = onNameChange,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = IrisPrimary,
+                    unfocusedBorderColor = IrisOutline,
+                    cursorColor = IrisPrimary,
+                    focusedContainerColor = IrisSurface,
+                    unfocusedContainerColor = IrisSurface
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Rename", color = IrisPrimary, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = IrisTextMuted)
+            }
         }
-    }
+    )
 }
 
 private fun formatTimestamp(millis: Long): String {

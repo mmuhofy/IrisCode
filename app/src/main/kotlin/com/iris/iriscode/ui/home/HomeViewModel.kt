@@ -22,9 +22,6 @@ data class HomeWorkspaceGroup(
 
 data class HomeUiState(
     val workspaceGroups: List<HomeWorkspaceGroup> = emptyList(),
-    val showNewChatSheet: Boolean = false,
-    val newChatName: String = "",
-    val newChatPath: String = "",
     val isLoading: Boolean = true
 )
 
@@ -56,45 +53,20 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun showNewChatSheet() {
-        _state.value = _state.value.copy(
-            showNewChatSheet = true,
-            newChatName = "",
-            newChatPath = ""
-        )
-    }
-
-    fun hideNewChatSheet() {
-        _state.value = _state.value.copy(showNewChatSheet = false)
-    }
-
-    fun updateNewChatName(name: String) {
-        _state.value = _state.value.copy(newChatName = name)
-    }
-
-    fun updateNewChatPath(path: String) {
-        _state.value = _state.value.copy(newChatPath = path)
-    }
-
-    fun createChat(
+    fun quickCreateChat(
         onCreated: (projectName: String, projectId: Long, projectPath: String, sessionId: String) -> Unit
     ) {
-        val name = _state.value.newChatName.trim()
-        val path = _state.value.newChatPath.trim()
-        if (name.isEmpty() || path.isEmpty()) return
-
         viewModelScope.launch {
-            val projectId = projectRepository.createProject(name, path)
+            val projectId = projectRepository.createProject("New Chat", "")
             val sessionId = UUID.randomUUID().toString()
             sessionRepository.createSession(
                 Session(
                     id = sessionId,
                     projectId = projectId,
-                    summary = "New session"
+                    summary = "New chat"
                 )
             )
-            _state.value = _state.value.copy(showNewChatSheet = false)
-            onCreated(name, projectId, path, sessionId)
+            onCreated("New Chat", projectId, "", sessionId)
         }
     }
 }
