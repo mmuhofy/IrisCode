@@ -15,6 +15,15 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+enum class HomeTab { Chats, Workspaces }
+
+data class SessionWithWorkspace(
+    val session: Session,
+    val projectName: String,
+    val projectId: Long,
+    val projectPath: String
+)
+
 data class HomeWorkspaceGroup(
     val project: Project,
     val sessions: List<Session>
@@ -22,6 +31,8 @@ data class HomeWorkspaceGroup(
 
 data class HomeUiState(
     val workspaceGroups: List<HomeWorkspaceGroup> = emptyList(),
+    val allSessions: List<SessionWithWorkspace> = emptyList(),
+    val selectedTab: HomeTab = HomeTab.Chats,
     val isLoading: Boolean = true
 )
 
@@ -45,12 +56,28 @@ class HomeViewModel @Inject constructor(
                     val sessions = sessionRepository.getSessionsByProject(project.id).first()
                     HomeWorkspaceGroup(project, sessions)
                 }
+                val allSessions = groups.flatMap { group ->
+                    group.sessions.map { session ->
+                        SessionWithWorkspace(
+                            session = session,
+                            projectName = group.project.name,
+                            projectId = group.project.id,
+                            projectPath = group.project.path
+                        )
+                    }
+                }.sortedByDescending { it.session.createdAt }
+
                 _state.value = _state.value.copy(
                     workspaceGroups = groups,
+                    allSessions = allSessions,
                     isLoading = false
                 )
             }
         }
+    }
+
+    fun selectTab(tab: HomeTab) {
+        _state.value = _state.value.copy(selectedTab = tab)
     }
 
     fun quickCreateChat(

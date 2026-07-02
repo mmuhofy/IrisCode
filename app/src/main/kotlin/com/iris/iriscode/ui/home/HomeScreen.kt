@@ -1,13 +1,12 @@
 package com.iris.iriscode.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -26,15 +24,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.composables.icons.lucide.*
 import com.iris.iriscode.domain.model.Session
-import com.iris.iriscode.ui.components.ModernCard
 import com.iris.iriscode.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val SectionGradient = Brush.horizontalGradient(
+private val CardGradient = Brush.horizontalGradient(
+    colors = listOf(
+        IrisPrimary.copy(alpha = 0.04f),
+        IrisSurfaceContainer,
+        IrisSurfaceContainer
+    ),
+    startX = 0f,
+    endX = 400f
+)
+
+private val AccentGradient = Brush.horizontalGradient(
     colors = listOf(
         IrisPrimary.copy(alpha = 0.08f),
         IrisPrimary.copy(alpha = 0.02f),
@@ -60,7 +68,16 @@ fun HomeScreen(
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Header()
+            TopBar()
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            TabSelector(
+                selectedTab = state.selectedTab,
+                onTabSelect = viewModel::selectTab
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (state.isLoading) {
                 Box(
@@ -70,251 +87,219 @@ fun HomeScreen(
                     CircularProgressIndicator(
                         color = IrisPrimary,
                         strokeWidth = 2.dp,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-            } else if (state.workspaceGroups.isEmpty()) {
-                EmptyState(onNewChat = { viewModel.quickCreateChat(onChatClick) })
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 4.dp,
-                        bottom = 88.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    state.workspaceGroups.forEach { group ->
-                        item(key = "header_${group.project.id}") {
-                            WorkspaceHeader(
-                                name = group.project.name,
-                                count = group.sessions.size,
-                                path = group.project.path,
-                                onClick = {
-                                    onWorkspaceClick(
-                                        group.project.name,
-                                        group.project.id,
-                                        group.project.path
-                                    )
-                                }
-                            )
-                        }
-                        items(
-                            items = group.sessions,
-                            key = { "session_${it.id}" }
-                        ) { session ->
-                            ChatItem(
-                                session = session,
-                                projectPath = group.project.path,
-                                onClick = {
-                                    onChatClick(
-                                        group.project.name,
-                                        group.project.id,
-                                        group.project.path,
-                                        session.id
-                                    )
-                                },
-                                onLongClick = {
-                                    renameTarget = session
-                                    renameText = session.summary.ifEmpty { "New chat" }
-                                }
-                            )
-                        }
-                    }
+                when (state.selectedTab) {
+                    HomeTab.Chats -> ChatsTab(
+                        sessions = state.allSessions,
+                        onChatClick = onChatClick,
+                        onRenameRequest = { session ->
+                            renameTarget = session
+                            renameText = session.summary.ifEmpty { "New chat" }
+                        },
+                        onNewChat = { viewModel.quickCreateChat(onChatClick) }
+                    )
+                    HomeTab.Workspaces -> WorkspacesTab(
+                        groups = state.workspaceGroups,
+                        onWorkspaceClick = onWorkspaceClick,
+                        onNewChat = { viewModel.quickCreateChat(onChatClick) }
+                    )
                 }
             }
         }
 
-        FloatingActionButton(
-            onClick = { viewModel.quickCreateChat(onChatClick) },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp)
-                .navigationBarsPadding(),
-            containerColor = IrisPrimary,
-            contentColor = IrisBackground,
-            shape = RoundedCornerShape(16.dp),
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 12.dp
-            )
-        ) {
-            Icon(
-                imageVector = Lucide.Plus,
-                contentDescription = "New Chat",
-                modifier = Modifier.size(22.dp)
-            )
-        }
+        NewChatFAB(
+            onClick = { viewModel.quickCreateChat(onChatClick) }
+        )
     }
 
     if (renameTarget != null) {
         RenameDialog(
             currentName = renameText,
+            onNameChange = { renameText = it },
             onConfirm = { renameTarget = null },
-            onDismiss = { renameTarget = null },
-            onNameChange = { renameText = it }
+            onDismiss = { renameTarget = null }
         )
     }
 }
 
 @Composable
-private fun Header() {
-    Column(
+private fun TopBar() {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp)
+            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Iris Code",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = IrisText,
-            letterSpacing = (-0.5).sp
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = "Code anywhere. Agent-powered.",
-            style = MaterialTheme.typography.bodySmall,
-            color = IrisTextMuted,
-            letterSpacing = 0.3.sp
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(IrisPrimary)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "Iris Code",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = IrisText,
+                letterSpacing = (-0.3).sp
+            )
+        }
+
+        IconButton(onClick = { }) {
+            Icon(
+                imageVector = Lucide.Settings,
+                contentDescription = "Settings",
+                tint = IrisTextMuted,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
 @Composable
-private fun WorkspaceHeader(
-    name: String,
-    count: Int,
-    path: String,
-    onClick: () -> Unit
+private fun TabSelector(
+    selectedTab: HomeTab,
+    onTabSelect: (HomeTab) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.99f else 1f,
-        animationSpec = tween(80),
-        label = "wsScale"
+    val bgColor by animateColorAsState(
+        targetValue = if (selectedTab == HomeTab.Chats) IrisPrimary.copy(alpha = 0.15f)
+            else IrisSurfaceVariant,
+        animationSpec = tween(250),
+        label = "tabBg"
     )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 6.dp)
-            .scale(pressScale)
+            .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(SectionGradient)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .background(IrisSurfaceVariant)
+            .padding(3.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(IrisPrimary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Lucide.FolderKanban,
-                contentDescription = null,
-                tint = IrisPrimary,
-                modifier = Modifier.size(15.dp)
+        HomeTab.entries.forEach { tab ->
+            val isSelected = tab == selectedTab
+            val textColor by animateColorAsState(
+                targetValue = if (isSelected) IrisPrimary else IrisTextMuted,
+                animationSpec = tween(200),
+                label = "tabText"
             )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = IrisText
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = IrisPrimary.copy(alpha = 0.12f)
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (isSelected) IrisPrimary.copy(alpha = 0.15f)
+                        else Color.Transparent
+                    )
+                    .clickable { onTabSelect(tab) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
+                    Icon(
+                        imageVector = if (tab == HomeTab.Chats) Lucide.MessageSquareText
+                                else Lucide.FolderKanban,
+                        contentDescription = null,
+                        tint = textColor,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
                     Text(
-                        text = "$count",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = IrisPrimary,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        text = tab.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = textColor
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = path,
-                style = MaterialTheme.typography.labelSmall,
-                color = IrisTextMuted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
         }
-        Icon(
-            imageVector = Lucide.ChevronRight,
-            contentDescription = null,
-            tint = IrisTextMuted.copy(alpha = 0.3f),
-            modifier = Modifier.size(16.dp)
-        )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ChatItem(
+private fun ChatsTab(
+    sessions: List<SessionWithWorkspace>,
+    onChatClick: (projectName: String, projectId: Long, projectPath: String, sessionId: String) -> Unit,
+    onRenameRequest: (Session) -> Unit,
+    onNewChat: () -> Unit
+) {
+    if (sessions.isEmpty()) {
+        EmptyState(
+            icon = Lucide.MessageSquarePlus,
+            title = "No chats yet",
+            subtitle = "Start a chat and let Iris help you code",
+            onAction = onNewChat
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = 80.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            items(sessions, key = { it.session.id }) { item ->
+                ChatCard(
+                    session = item.session,
+                    workspaceName = item.projectName,
+                    workspacePath = item.projectPath,
+                    onClick = {
+                        onChatClick(
+                            item.projectName,
+                            item.projectId,
+                            item.projectPath,
+                            item.session.id
+                        )
+                    },
+                    onLongClick = { onRenameRequest(item.session) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ChatCard(
     session: Session,
-    projectPath: String,
+    workspaceName: String,
+    workspacePath: String,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = tween(100),
-        label = "cardScale"
-    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .scale(pressScale)
             .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        IrisPrimary.copy(alpha = 0.04f),
-                        IrisSurfaceContainer,
-                        IrisSurfaceContainer
-                    ),
-                    startX = 0f,
-                    endX = 400f
-                )
-            )
+            .background(CardGradient)
             .combinedClickable(
                 interactionSource = interactionSource,
+                indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(start = 0.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
+            .padding(start = 0.dp, end = 14.dp, top = 13.dp, bottom = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(42.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(IrisPrimary)
-        )
+        AccentBar()
         Spacer(modifier = Modifier.width(14.dp))
         Box(
             modifier = Modifier
@@ -344,8 +329,19 @@ private fun ChatItem(
                 overflow = TextOverflow.Ellipsis,
                 color = IrisText
             )
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = workspaceName,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = IrisPrimary.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "  ·  ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = IrisTextMuted.copy(alpha = 0.3f)
+                )
                 Text(
                     text = formatTimestamp(session.createdAt),
                     style = MaterialTheme.typography.labelSmall,
@@ -376,7 +372,192 @@ private fun ChatItem(
 }
 
 @Composable
-private fun EmptyState(onNewChat: () -> Unit) {
+private fun WorkspacesTab(
+    groups: List<HomeWorkspaceGroup>,
+    onWorkspaceClick: (projectName: String, projectId: Long, projectPath: String) -> Unit,
+    onNewChat: () -> Unit
+) {
+    if (groups.isEmpty()) {
+        EmptyState(
+            icon = Lucide.FolderOpen,
+            title = "No workspaces yet",
+            subtitle = "Create a chat to get started",
+            onAction = onNewChat
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = 80.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(groups, key = { it.project.id }) { group ->
+                WorkspaceCard(
+                    name = group.project.name,
+                    path = group.project.path,
+                    chatCount = group.sessions.size,
+                    onClick = {
+                        onWorkspaceClick(
+                            group.project.name,
+                            group.project.id,
+                            group.project.path
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkspaceCard(
+    name: String,
+    path: String,
+    chatCount: Int,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(AccentGradient)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(IrisPrimary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Lucide.FolderKanban,
+                contentDescription = null,
+                tint = IrisPrimary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = IrisText
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = IrisPrimary.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = "$chatCount",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = IrisPrimary,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = path.ifEmpty { "No directory set" },
+                style = MaterialTheme.typography.bodySmall,
+                color = IrisTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Icon(
+            imageVector = Lucide.ChevronRight,
+            contentDescription = null,
+            tint = IrisTextMuted.copy(alpha = 0.25f),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+private fun AccentBar() {
+    Box(
+        modifier = Modifier
+            .width(3.dp)
+            .height(42.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(IrisPrimary)
+    )
+}
+
+@Composable
+private fun NewChatFAB(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            IrisPrimary,
+                            IrisPrimaryVariant
+                        )
+                    )
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 24.dp, vertical = 13.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Lucide.Plus,
+                    contentDescription = null,
+                    tint = IrisBackground,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "New Chat",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = IrisBackground
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onAction: () -> Unit
+) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -384,49 +565,32 @@ private fun EmptyState(onNewChat: () -> Unit) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(72.dp)
                     .clip(CircleShape)
                     .background(IrisSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Lucide.Sparkles,
+                    imageVector = icon,
                     contentDescription = null,
-                    tint = IrisPrimary,
-                    modifier = Modifier.size(36.dp)
+                    tint = IrisPrimary.copy(alpha = 0.6f),
+                    modifier = Modifier.size(32.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "What do you want to build?",
-                style = MaterialTheme.typography.titleLarge,
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = IrisText
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Start a chat and let Iris help you code",
-                style = MaterialTheme.typography.bodyMedium,
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
                 color = IrisTextMuted,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(28.dp))
-            FilledTonalButton(
-                onClick = onNewChat,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = IrisPrimary.copy(alpha = 0.12f)
-                ),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-            ) {
-                Icon(Lucide.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "New Chat",
-                    fontWeight = FontWeight.SemiBold,
-                    color = IrisPrimary
-                )
-            }
         }
     }
 }
