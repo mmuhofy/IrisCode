@@ -15,6 +15,7 @@ import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -58,6 +59,7 @@ class GeminiClient @Inject constructor() {
             ) {
                 if (data == "[DONE]") return
                 trySend(data)
+                    .onFailure { close(IOException("Stream buffer overflow")) }
             }
 
             override fun onFailure(

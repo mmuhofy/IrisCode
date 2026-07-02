@@ -1,8 +1,13 @@
 package com.iris.iriscode.ui.chat
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -232,7 +237,8 @@ private fun TopBar(
                     .size(40.dp)
                     .scale(backScale)
                     .clip(CircleShape)
-                    .background(IrisSurface)
+                    .background(IrisBackground)
+                    .border(1.dp, IrisOutline, CircleShape)
                     .clickable(
                         interactionSource = backInteractionSource,
                         indication = null,
@@ -348,7 +354,8 @@ private fun TopBar(
                     .size(40.dp)
                     .scale(moreScale)
                     .clip(CircleShape)
-                    .background(IrisSurface)
+                    .background(IrisBackground)
+                    .border(1.dp, IrisOutline, CircleShape)
                     .clickable(
                         interactionSource = moreInteractionSource,
                         indication = null,
@@ -833,6 +840,18 @@ private fun OptionsSheet(
 
 @Composable
 private fun TypingIndicator() {
+    val infiniteTransition = rememberInfiniteTransition(label = "typing")
+
+    val brainAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "brainPulse"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -849,7 +868,7 @@ private fun TypingIndicator() {
             Icon(
                 imageVector = Lucide.BrainCircuit,
                 contentDescription = null,
-                tint = IrisPrimary.copy(alpha = 0.6f),
+                tint = IrisPrimary.copy(alpha = brainAlpha),
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -861,12 +880,25 @@ private fun TypingIndicator() {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                repeat(3) {
+                repeat(3) { index ->
+                    val scale = remember { Animatable(0.4f) }
+                    LaunchedEffect(Unit) {
+                        delay(index * 200L)
+                        while (isActive) {
+                            scale.animateTo(1f, tween(500))
+                            scale.animateTo(0.4f, tween(500))
+                        }
+                    }
                     Box(
                         modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = scale.value
+                                scaleY = scale.value
+                                alpha = scale.value
+                            }
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(IrisTextSecondary.copy(alpha = 0.5f))
+                            .background(IrisTextSecondary.copy(alpha = 0.7f))
                     )
                 }
             }
