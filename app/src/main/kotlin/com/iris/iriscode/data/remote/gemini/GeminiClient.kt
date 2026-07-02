@@ -58,7 +58,7 @@ class GeminiClient @Inject constructor() {
                 data: String
             ) {
                 if (data == "[DONE]") return
-                if (!trySend(data)) {
+                if (trySend(data).isFailure) {
                     close(IOException("Stream buffer overflow"))
                 }
             }
