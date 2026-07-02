@@ -1,10 +1,8 @@
 package com.iris.iriscode.ui.chat
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import kotlinx.coroutines.delay
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.roundToInt
 import java.io.File
 import com.composables.icons.lucide.*
 import com.iris.iriscode.ui.chat.components.FilesTab
@@ -147,9 +144,6 @@ fun ChatScreen(
                                     onApproveDiff = { viewModel.approveDiff(message.id) },
                                     onRejectDiff = { viewModel.rejectDiff(message.id) }
                                 )
-                            }
-                            if (state.isTyping) {
-                                item(key = "typing") { TypingIndicator() }
                             }
                         }
                     }
@@ -835,51 +829,3 @@ private fun OptionsSheet(
     }
 }
 
-@Composable
-private fun TypingIndicator() {
-    val brainAnim = remember { Animatable(0.3f) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            brainAnim.animateTo(1f, tween(400))
-            brainAnim.animateTo(0.3f, tween(400))
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Lucide.BrainCircuit,
-            contentDescription = null,
-            tint = IrisPrimary.copy(alpha = brainAnim.value),
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            repeat(3) { index ->
-                val scale = remember { Animatable(0.3f) }
-                LaunchedEffect(Unit) {
-                    delay(index * 200L)
-                    while (true) {
-                        scale.animateTo(1f, tween(400))
-                        scale.animateTo(0.3f, tween(400))
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = scale.value
-                            scaleY = scale.value
-                            alpha = scale.value
-                        }
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(IrisPrimary)
-                )
-            }
-        }
-    }
-}

@@ -1,14 +1,17 @@
 package com.iris.iriscode.ui.chat.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.iris.iriscode.domain.model.ChatMessage
 import com.iris.iriscode.ui.theme.IrisSurface
@@ -38,34 +41,61 @@ fun MessageBubble(
 
 @Composable
 private fun UserBubble(message: ChatMessage.UserText) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp)
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
-        MarkdownText(
-            markdown = message.text,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = IrisText
+        Column {
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 320.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(IrisSurface)
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                MarkdownText(
+                    markdown = message.text,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = IrisText
+                    )
+                )
+            }
+            Text(
+                text = formatTimestamp(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = IrisTextSecondary.copy(alpha = 0.6f),
+                modifier = Modifier.padding(top = 2.dp, start = 4.dp)
             )
-        )
-        Text(
-            text = formatTimestamp(message.timestamp),
-            style = MaterialTheme.typography.labelSmall,
-            color = IrisTextSecondary.copy(alpha = 0.6f),
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(top = 2.dp)
-        )
+        }
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun AgentBubble(message: ChatMessage.AgentText) {
+    val anim = remember { Animatable(1f) }
+    var hasAnimated by remember { mutableStateOf(false) }
+
+    LaunchedEffect(message.text) {
+        if (!hasAnimated && message.text.isNotEmpty()) {
+            hasAnimated = true
+            anim.snapTo(0f)
+            anim.animateTo(1f, tween(250))
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 6.dp)
+            .graphicsLayer {
+                val t = anim.value
+                scaleX = 0.92f + t * 0.08f
+                scaleY = 0.92f + t * 0.08f
+                alpha = t
+            }
     ) {
         MarkdownText(
             markdown = message.text,
@@ -102,7 +132,7 @@ private fun ReadFileCard(message: ChatMessage.ReadFile) {
                 text = message.content.take(200),
                 style = MaterialTheme.typography.bodySmall,
                 color = IrisTextSecondary,
-                modifier = Modifier.padding(12.dp, 4.dp, 12.dp, 8.dp)
+                modifier = Modifier.padding(12.dp, 8.dp, 12.dp, 4.dp)
             )
         }
     }
