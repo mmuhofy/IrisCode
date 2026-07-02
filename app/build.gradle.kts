@@ -7,12 +7,45 @@ plugins {
 }
 
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.net.URL
+import java.nio.channels.Channels
 import java.util.Properties
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+// ─── Asset download tasks ──────────────────────────────────────────────────
+val ubuntuRootfsUrl = "https://cdimage.ubuntu.com/ubuntu-base/releases/24.04.4/release/ubuntu-base-24.04.4-base-arm64.tar.gz"
+val ubuntuRootfsFile = file("src/main/assets/ubuntu-base.tar.gz")
+
+tasks.register("downloadUbuntuRootfs") {
+    description = "Download Ubuntu base rootfs (arm64) for APK bundling"
+    onlyIf { !ubuntuRootfsFile.exists() }
+    doLast {
+        logger.lifecycle("Downloading Ubuntu base rootfs (arm64)...")
+        ubuntuRootfsFile.parentFile.mkdirs()
+        URL(ubuntuRootfsUrl).openConnection().let { conn ->
+            conn.setRequestProperty("User-Agent", "IrisCode/1.0")
+            conn.connect()
+            val input = conn.getInputStream()
+            FileOutputStream(ubuntuRootfsFile).use { output ->
+                input.transferTo(output)
+            }
+        }
+        logger.lifecycle("Downloaded: ${ubuntuRootfsFile.length()} bytes")
+    }
+}
+
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+        variant.preBuildProvider.configure {
+            dependsOn("downloadUbuntuRootfs")
+        }
+    }
 }
 
 android {

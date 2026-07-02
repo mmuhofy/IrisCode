@@ -44,7 +44,7 @@ data class ChatUiState(
     val inputText: String = "",
     val isProcessing: Boolean = false,
     val isTyping: Boolean = false,
-    val ubuntuSetupState: UbuntuSetupState = UbuntuSetupState.Checking,
+    val ubuntuSetupState: UbuntuSetupState = UbuntuSetupState.Idle,
     val workMode: WorkMode = WorkMode.DEFAULT,
     val currentModel: String = "flash",
     val showSlashMenu: Boolean = false,
@@ -72,7 +72,7 @@ class ChatViewModel @Inject constructor(
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     private val ubuntuBootstrap = UbuntuBootstrap(application)
-    val terminalManager = TerminalManager(ubuntuBootstrap)
+    val terminalManager = TerminalManager(ubuntuBootstrap, application)
 
     private val geminiStepHistory = mutableListOf<GeminiStep>()
 
@@ -453,7 +453,7 @@ class ChatViewModel @Inject constructor(
 
     fun retryUbuntuSetup() {
         ubuntuBootstrap.retry()
-        _state.value = _state.value.copy(ubuntuSetupState = UbuntuSetupState.Checking)
+        _state.value = _state.value.copy(ubuntuSetupState = UbuntuSetupState.Idle)
         viewModelScope.launch {
             ubuntuBootstrap.install { state ->
                 _state.value = _state.value.copy(ubuntuSetupState = state)

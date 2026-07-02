@@ -13,3 +13,5 @@ local.properties
 keystore.properties
 index.txt
 data.tar.xz
+app/src/main/assets/ubuntu-base.tar.gz
+proot_test

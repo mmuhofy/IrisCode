@@ -3,9 +3,7 @@ package com.iris.iriscode.ui.terminal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -54,26 +52,12 @@ fun TerminalScreen(
     }
 
     when (ubuntuSetupState) {
-        is UbuntuSetupState.Checking, 
-        is UbuntuSetupState.DownloadingProot, 
-        is UbuntuSetupState.DownloadingLibandroidShmem, 
-        is UbuntuSetupState.DownloadingLibtalloc, 
-        is UbuntuSetupState.DownloadingRootfs, 
-        is UbuntuSetupState.Extracting, 
+        is UbuntuSetupState.Extracting,
         is UbuntuSetupState.Configuring -> {
             Box(modifier = modifier, contentAlignment = Alignment.Center) {
                 val msg = when (ubuntuSetupState) {
-                    is UbuntuSetupState.Checking -> "Checking Ubuntu environment..."
-                    is UbuntuSetupState.DownloadingProot -> 
-                        "Downloading PRoot (${(ubuntuSetupState.progress * 100).toInt()}%)..."
-                    is UbuntuSetupState.DownloadingLibandroidShmem -> 
-                        "Downloading libandroid-shmem (${(ubuntuSetupState.progress * 100).toInt()}%)..."
-                    is UbuntuSetupState.DownloadingLibtalloc -> 
-                        "Downloading libtalloc (${(ubuntuSetupState.progress * 100).toInt()}%)..."
-                    is UbuntuSetupState.DownloadingRootfs -> 
-                        "Downloading Ubuntu rootfs (${(ubuntuSetupState.progress * 100).toInt()}%)..."
                     is UbuntuSetupState.Extracting -> "Extracting Ubuntu rootfs..."
-                    is UbuntuSetupState.Configuring -> "Configuring Ubuntu rootfs..."
+                    is UbuntuSetupState.Configuring -> "Configuring Ubuntu..."
                     else -> ""
                 }
                 CircularProgressIndicator()

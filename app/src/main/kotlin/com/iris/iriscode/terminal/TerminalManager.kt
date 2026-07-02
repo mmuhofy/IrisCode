@@ -1,10 +1,12 @@
 package com.iris.iriscode.terminal
 
+import android.app.Application
 import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalView
 
 class TerminalManager(
-    private val ubuntuBootstrap: UbuntuBootstrap
+    private val ubuntuBootstrap: UbuntuBootstrap,
+    application: Application
 ) {
     var currentSession: TerminalSession? = null
         private set
@@ -13,7 +15,9 @@ class TerminalManager(
 
     private var terminalViewRef: TerminalView? = null
 
-    private val prootRunner: ProotRunner by lazy { ProotRunner(ubuntuBootstrap) }
+    private val prootRunner: ProotRunner by lazy {
+        ProotRunner(ubuntuBootstrap, application.applicationInfo.nativeLibraryDir)
+    }
 
     fun registerTerminalView(view: TerminalView) {
         terminalViewRef = view
@@ -52,10 +56,6 @@ class TerminalManager(
         )
         currentSession = session
         return session
-    }
-
-    fun updateSessionClient() {
-        currentSession?.updateTerminalSessionClient(sessionClient)
     }
 
     fun onSessionFinished(finishedSession: TerminalSession) {
