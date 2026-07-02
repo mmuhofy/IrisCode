@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.zip.GZIPInputStream
 
 // Inspired by: github.com/Xed-Editor/Karbon-PackagesX (proot binary for Android NDK)
@@ -60,9 +61,19 @@ class UbuntuBootstrap(private val context: Context) {
                     }
                 }
 
-                // Ubuntu rootfs
+                // Ubuntu rootfs (try multiple asset names, fallback to download)
                 rootfsDir.mkdirs()
-                context.assets.open("ubuntu-base.tar.gz").use { input ->
+                val rootfsStream = try {
+                    context.assets.open("ubuntu_rootfs")
+                } catch (_: Exception) {
+                    try {
+                        context.assets.open("ubuntu-base.tar.gz")
+                    } catch (_: Exception) {
+                        Log.w("UbuntuBootstrap", "Rootfs not in assets, downloading...")
+                        downloadRootfs()
+                    }
+                }
+                rootfsStream.use { input ->
                     extractTarGz(GZIPInputStream(input), rootfsDir)
                 }
 
@@ -117,8 +128,28 @@ class UbuntuBootstrap(private val context: Context) {
         )
     }
 
+    private fun downloadRootfs(): InputStream {
+        val arch = android.os.Build.SUPPORTED_ABIS[0]
+        val rootfsArch = ROOTFS_ARCH_MAP[arch] ?: "arm64"
+        val url = "https://cdimage.ubuntu.com/ubuntu-base/releases/$UBUNTU_VERSION/release/ubuntu-base-$UBUNTU_VERSION-base-$rootfsArch.tar.gz"
+        val request = okhttp3.Request.Builder().url(url).addHeader("User-Agent", "IrisCode/1.0").build()
+        val response = okhttp3.OkHttpClient.Builder().followRedirects(true).build().newCall(request).execute()
+        if (!response.isSuccessful) throw RuntimeException("Download failed: ${response.code} for $url")
+        return response.body!!.byteStream()
+    }
+
     fun retry() {
         baseDir.deleteRecursively()
+    }
+
+    companion object {
+        private const val UBUNTU_VERSION = "24.04.4"
+        private val ROOTFS_ARCH_MAP = mapOf(
+            "arm64-v8a" to "arm64",
+            "armeabi-v7a" to "armhf",
+            "x86_64" to "amd64",
+            "x86" to "i386"
+        )
     }
 
     // ─── tar.gz extraction (no system binary dependency) ─────────────────────
